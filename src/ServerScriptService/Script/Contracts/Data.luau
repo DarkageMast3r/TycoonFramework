@@ -20,5 +20,6 @@ export type data = {
 
 return {} :: {
 	load_data: (player: Player) -> data,
+	replicate_data: (player: Player) -> (),
 	load_plot: (player: Player) -> plot_serialized
 }

@@ -9,7 +9,7 @@ local Tycoon = require(common.Game.Tycoon)
 local Plot = require(common.Plot)
 local Asset = require(common.Asset.Asset)
 local DragModes = require(common.DragModes)
-local data = require(contracts.Data)
+local Data = require(contracts.Data)
 
 function Tycoon.build(
 	player: Player,
@@ -31,7 +31,7 @@ function Tycoon.build(
 		return
 	end
 	
-	local playerData = data.load_data(player)
+	local playerData = Data.load_data(player)
 
 	local layer = Asset.resolve_type(assetName)
 	for _, position in DragModes.get_positions(layer, from, to, dragmode) do
@@ -46,7 +46,6 @@ function Tycoon.build(
 	end
 
 	replicatedStorage.Remotes.PlotBuildEvent:FireClient(player, from, to, layer, assetName, dragmode)
-	replicatedStorage.Remotes.StatEvent:FireClient(player, "currency", playerData.currency)
 end
 
 
@@ -65,7 +64,7 @@ function Tycoon.delete(
 		return
 	end
 
-	local playerData = data.load_data(player)
+	local playerData = Data.load_data(player)
 
 	for _, position in DragModes.get_positions(layer, from, to, dragmode) do
 		local currentAsset = Plot.get_asset(position, layer)
@@ -77,7 +76,7 @@ function Tycoon.delete(
 	end
 
 	replicatedStorage.Remotes.PlotBuildEvent:FireClient(player, from, to, layer, "", dragmode)
-	replicatedStorage.Remotes.StatEvent:FireClient(player, "currency", playerData.currency)
 end
+
 
 return true

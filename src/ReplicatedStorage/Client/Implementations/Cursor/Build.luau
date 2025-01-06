@@ -140,7 +140,6 @@ local function sendBuildCommand()
 			cursor.current.dragmode
 		)
 	else
-		print(cursor.current.pos.pos, cursor.current.pos.rot)
 		replicatedStorage.Remotes.PlotBuildEvent:FireServer(
 			cursor.current.pos.pos,
 			cursor.current.pos,

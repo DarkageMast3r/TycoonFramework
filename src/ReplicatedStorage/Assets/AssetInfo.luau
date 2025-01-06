@@ -12,6 +12,9 @@ return {
 	["Asset.Table"] = {
 		price = 50
 	},
+	["Asset.Checkout"] = {
+		price = 100
+	},
 	["Wall_Outer.Plaster"] = {
 		price = 20
 	},

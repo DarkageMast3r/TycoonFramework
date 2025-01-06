@@ -11,13 +11,19 @@ local data = require(contracts.Data)
 local profileStore = require(contracts.ProfileStore)
 local asset = require(common.Asset.Asset)
 
+type diff_field<t> = {prev: t, now: t}
+type diff = {
+	[string]: diff_field<any>
+}
+
 local datastores = {}
 local function datastore_create(name: string, stub: {[any]: any})
 	datastores[name] = {
 		stub = stub,
 		profiles = {},
 		profiles_loading = {},
-		datastore = profileStore.New(name, stub)
+		datastore = profileStore.New(name, stub),
+		last_replicated = table.clone(stub)
 	}
 end
 
@@ -63,9 +69,50 @@ local function datastore_get(name: string, player: Player, key: string): any
 	return datastore.profiles[key].Data
 end
 
+
+-- TODO: Generate nested diff
+local function diff_generate(prev, now): diff
+	local diff = {}
+	for i, v in now do
+		if prev[i] == v then
+			continue
+		end
+		if diff[i] == nil then
+			diff[i] = {}
+		end
+		diff[i].now = v
+	end
+	for i, v in prev do
+		if now[i] == v then
+			continue
+		end
+		if diff[i] == nil then
+			diff[i] = {}
+		end
+		diff[i].prev = v
+	end
+	return diff
+end
+
+
+local function datastore_replicate_get_diff(name: string, player: Player, key: string): diff
+	local datastore = datastores[name]
+	if datastore == nil then
+		error(`No datastore found by name {name}!`)
+	end
+	local last = datastore.last_replicated
+	local cur = datastore_get(name, player, key)
+	local diff = diff_generate(last, cur)
+	datastore.last_replicated = table.clone(cur)
+	return diff
+end
+
+
+--[[
 local datastore_plot = profileStore.New("Plots", {
 	layers = {}
 } :: data.plot_serialized)
+--]]
 local profiles = {}
 
 datastore_create("Plots", {
@@ -82,6 +129,14 @@ end
 
 function data.load_data(player)
 	return datastore_get("Data", player, `data_{player.UserId}`)
+end
+
+
+function data.replicate_data(player)
+	local diff: diff = datastore_replicate_get_diff("Data", player, `data_{player.UserId}`)
+	if diff.currency then
+		replicatedStorage.Remotes.StatEvent:FireClient(player, "currency", diff.currency.now)
+	end
 end
 
 

@@ -95,6 +95,7 @@ elements.on_click(btn_select_assets, function()
 		"Asset.Chair",
 		"Asset.Table",
 		"Asset.Table.Corner",
+		"Asset.Checkout",
 	}, function(name)
 		cursor.set_state_build()
 		cursor.asset_select(name)

@@ -1,14 +1,16 @@
 --!strict
 local replicatedStorage = game:GetService("ReplicatedStorage")
+local serverScriptService = game:GetService("ServerScriptService")
 local runService = game:GetService("RunService")
 
-local contracts = replicatedStorage.Client.Contracts
+local contracts = serverScriptService.Script.Contracts
 local common = replicatedStorage.Common
 local actor = require(common.Actor.Actor)
 local customer = require(common.Actor.Customer)
 local tr = require(common.Data.TeleoReactive)
 local position = require(common.Data.Position)
 local plot = require(common.Plot)
+local Data = require(contracts.Data)
 
 
 local function is_in_bounds(p: Folder?, pos: Vector3): boolean
@@ -36,6 +38,9 @@ local programs: {tr.program<customer.customer>} = {
 		eat = {
 			function(c)
 				if position.distance(c.actionPosition, c.actor.position) < 0.01 then
+					local price = math.random(10, 20)
+					c.bill_to_pay += price
+					print(`Eaten for {price}`)
 					return "advanceSchedule"
 				end
 				return nil
@@ -45,6 +50,7 @@ local programs: {tr.program<customer.customer>} = {
 				if p == nil then
 					return nil
 				end
+				local found = plot.asset_seek(p, "asset", "Chair")
 				for _, chair in plot.asset_seek(p, "asset", "Chair") do
 					if position.distance(chair, c.actor.position) < 5 then
 						actor.walk_to(c.actor, chair)
@@ -55,9 +61,42 @@ local programs: {tr.program<customer.customer>} = {
 				return "wander"
 			end,
 		},
+		pay = {
+			function(c)
+				if position.distance(c.actionPosition, c.actor.position) < 0.01 then
+					local p = plot.get_by_folder(c.actionPosition.plot)
+					if p == nil then
+						return nil
+					end
+					local data = Data.load_data(p.owner)
+					if data == nil then
+						return nil
+					end
+					data.currency += c.bill_to_pay
+					c.bill_to_pay = 0
+					
+					return "advanceSchedule"
+				end
+				return nil
+			end,
+			function(c)
+				local p = plot.get_by_folder(c.actor.position.plot)
+				if p == nil then
+					return nil
+				end
+				for _, checkout in plot.asset_seek(p, "asset", "Checkout") do
+					if position.distance(checkout, c.actor.position) < 5 then
+						actor.walk_to(c.actor, checkout)
+						c.actionPosition = checkout
+						return ""
+					end
+				end
+				return "wander"
+			end,
+		},
 		wander = {
 			function(c)
-				if c.schedule[1] == "wander" and c.steps_since_last_action >= 15 then
+				if c.schedule[1] == "wander" and c.steps_since_last_action >= 5 then
 					return "advanceSchedule"
 				end
 				return nil
@@ -65,23 +104,14 @@ local programs: {tr.program<customer.customer>} = {
 			function(c)
 				local p = plot.get_by_folder(c.actor.position.plot) :: plot.plot
 				local pos = {
-					pos = Vector3.new(
-						math.random(0, p.size.X-1),
+					pos = c.actor.position.pos + Vector3.new(
+						math.random(-1, 1),
 						0,
-						math.random(0, p.size.Y-1)
+						math.random(-1, 1)
 					),
 					rot = 0,
 					plot = p.folder
 				}
-				--[[
-				local pos = position.translate(
-					position.translate(
-						c.actor.position,
-						0, 0, 0, math.random(0, 3)
-					),
-					1, 0, 0, 0
-				)
-				]]
 				if not is_in_bounds(pos.plot, pos.pos) then
 					return ""
 				end
@@ -94,6 +124,11 @@ local programs: {tr.program<customer.customer>} = {
 			function(c)
 				table.remove(c.schedule, 1)
 				c.steps_since_last_action = 0
+				c.actionPosition = {
+					pos = Vector3.new(math.huge, math.huge, math.huge),
+					rot = 0,
+					plot = c.actionPosition.plot
+				}
 				return ""
 			end,
 		},
@@ -123,11 +158,12 @@ function customer.spawn(pos, meshName, id)
 		id = actor.id,
 		actor = actor,
 		inventory = {},
-		schedule = {"eat", "wander", "eat"},
+		schedule = {"eat", "wander", "eat", "pay"},
 		steps_since_last_action = 0,
 		actionPosition = position.translate(pos, -1, -1, -1, 0),
 		program = tr.program_compile(programs[1], c),
-		positions_to_check = {}
+		positions_to_check = {},
+		bill_to_pay = 0
 	}
 	c.program.object = c
 	table.insert(customer.allCustomers, c)
