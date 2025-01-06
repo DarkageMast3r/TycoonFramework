@@ -572,8 +572,14 @@ function plot.pathfind_to(from, to)
 		end
 	)
 	
-	nodes[#nodes] = to.pos
 	nodes[1] = from.pos
+	nodes[#nodes] = to.pos
+	if #nodes == 1 then
+		nodes = {
+			from.pos,
+			to.pos
+		}
+	end
 	
 	local path = {}
 	for i = 1, #nodes do

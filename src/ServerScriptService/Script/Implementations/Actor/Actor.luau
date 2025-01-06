@@ -36,7 +36,7 @@ function actor.create(pos, meshName, idHint)
 		position = pos,
 		target = nil,
 		path = {},
-		speed = 8,
+		speed = 1,
 		mesh = nil,
 		meshName = meshName,
 		animations = {},
@@ -53,9 +53,9 @@ end
 
 
 function actor.walk_to(a, pos)
-	actor.switch_to_state(a, "moving")
 	a.path = {}
 	a.target = nil
+	actor.switch_to_state(a, "moving")
 
 	local from = {
 		pos = a.position.pos:Floor(),

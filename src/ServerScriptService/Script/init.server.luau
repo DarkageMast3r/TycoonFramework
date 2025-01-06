@@ -11,7 +11,7 @@ local asset = require(common.Asset.Asset)
 local actor = require(common.Actor.Actor)
 local customer = require(common.Actor.Customer)
 local dragModes = require(common.DragModes)
-local data = require(contracts.Data)
+local Data = require(contracts.Data)
 local tycoon = require(common.Game.Tycoon)
 
 
@@ -21,16 +21,20 @@ local bootload = require(script.Bootloader)
 local function update(dt: number)
 	actor.tick(dt)
 	customer.tick(dt)
+
+	for _, player in players:GetPlayers() do
+		Data.replicate_data(player)
+	end
 end
 
 replicatedStorage.Remotes.StatEvent.OnServerEvent:Connect(function(player: Player)
-	local sessionData = data.load_data(player)
+	local sessionData = Data.load_data(player)
 	replicatedStorage.Remotes.StatEvent:FireClient(player, "currency", sessionData.currency)
 end)
 
 
 local function player_join(player: Player)
-	local sessionData = data.load_data(player)
+	local sessionData = Data.load_data(player)
 	if runService:IsStudio() then
 		sessionData.currency = 1000000
 	end
@@ -105,5 +109,3 @@ players.PlayerAdded:Connect(player_join)
 for _, player in players:GetPlayers() do
 	player_join(player)
 end
-
-print("Finished")

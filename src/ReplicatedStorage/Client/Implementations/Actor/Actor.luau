@@ -35,7 +35,7 @@ function actor.create(pos, meshName, idHint)
 		position = pos,
 		target = nil,
 		path = {},
-		speed = 10,
+		speed = 1,
 		mesh = mesh,
 		meshName = meshName,
 		animations = {},

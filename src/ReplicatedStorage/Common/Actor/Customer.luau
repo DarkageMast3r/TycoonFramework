@@ -13,7 +13,8 @@ export type customer = {
 	steps_since_last_action: number,
 	actionPosition: position.position,
 	program: tr.program_compiled<customer>,
-	positions_to_check: {position.position}
+	positions_to_check: {position.position},
+	bill_to_pay: number
 }
 
 return {
