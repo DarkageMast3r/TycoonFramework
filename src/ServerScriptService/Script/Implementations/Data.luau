@@ -11,7 +11,7 @@ local data = require(contracts.Data)
 local profileStore = require(contracts.ProfileStore)
 local asset = require(common.Asset.Asset)
 
-type diff_field<t> = {prev: t, now: t}
+type diff_field<t> = {prev: t?, now: t?}
 type diff = {
 	[string]: diff_field<any>
 }
@@ -71,7 +71,7 @@ end
 
 
 -- TODO: Generate nested diff
-local function diff_generate(prev, now): diff
+local function diff_generate(prev: {[string]: any}, now: {[string]: any}): diff
 	local diff = {}
 	for i, v in now do
 		if prev[i] == v then
@@ -108,11 +108,6 @@ local function datastore_replicate_get_diff(name: string, player: Player, key: s
 end
 
 
---[[
-local datastore_plot = profileStore.New("Plots", {
-	layers = {}
-} :: data.plot_serialized)
---]]
 local profiles = {}
 
 datastore_create("Plots", {

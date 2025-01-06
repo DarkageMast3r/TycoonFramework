@@ -68,7 +68,11 @@ local programs: {tr.program<customer.customer>} = {
 					if p == nil then
 						return nil
 					end
-					local data = Data.load_data(p.owner)
+					local player = p.owner
+					if player == nil then
+						return nil
+					end
+					local data = Data.load_data(player)
 					if data == nil then
 						return nil
 					end
