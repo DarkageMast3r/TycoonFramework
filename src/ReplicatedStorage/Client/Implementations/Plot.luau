@@ -157,6 +157,26 @@ local function cell_update(
 			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
 			plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
 		end
+		for _, rules in rule.include do
+			for offset in rules do
+				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+				newPos = position.translate(newPos, offset[1], offset[2], offset[3], 0)
+				if cell_matches_transformation_rule(back, pos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
+					plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+				end
+			end
+		end
+		for _, rules in rule.exclude do
+			for offset in rules do
+				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+				newPos = position.translate(newPos, offset[1], offset[2], offset[3], 0)
+				if cell_matches_transformation_rule(back, pos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
+					plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+				end
+			end
+		end
 	end
 
 	local asset = plot.gridlayer_get_asset(back.wall_inner, pos)
