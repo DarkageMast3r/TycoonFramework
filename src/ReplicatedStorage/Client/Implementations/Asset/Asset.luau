@@ -26,6 +26,7 @@ function asset.create_by_name(name)
 	end
 	local asset = asset.set_fetch(asset.assets, name)
 	local created = asset:Clone()
+	created.Name = name
 	for _, part in created:GetDescendants() do
 		if part:IsA("BasePart") then
 			if part.CollisionGroup == "Actor" then
