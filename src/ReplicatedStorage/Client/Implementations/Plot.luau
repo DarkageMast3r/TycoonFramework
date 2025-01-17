@@ -35,10 +35,129 @@ local function plot_merge(old: plot.plot, new: plot.plot)
 		layer.assets_built = old.layers[i].assets_built or {}
 		layer.assets_models = old.layers[i].assets_models or {}
 	end
+	--[[
 	for i, layer in new.layers_computed do
-		layer.assets = old.layers[i].assets or layer.assets
-		layer.assets_built = old.layers[i].assets_built or {}
-		layer.assets_models = old.layers[i].assets_models or {}
+		layer.assets = old.layers_computer[i].assets or layer.assets
+		layer.assets_built = old.layers_computer[i].assets_built or {}
+		layer.assets_models = old.layers_computer[i].assets_models or {}
+	end
+	--]]
+end
+
+type transformation = {
+	include: {
+		[string]: {
+			[{number}]: string
+		}
+	},
+	exclude: {
+		[string]: {
+			[{number}]: string
+		}
+	},
+	modifier: string,
+	layer: string
+}
+
+
+local transformation_rules: {transformation} = {
+	{
+		include = {
+			wall_inner = {
+				[{0, 0, 0, 0}] = "DoorSingle"
+			}
+		},
+		exclude = {},
+		modifier = "DoorSingle",
+		layer = "wall_outer"
+	},
+	{
+		include = {
+			wall_inner = {
+				[{1, 0, 0, 2}] = "DoorSingle"
+			}
+		},
+		exclude = {},
+		modifier = "DoorSingle",
+		layer = "wall_outer"
+	},
+	{
+		include = {
+			wall_inner = {
+				[{0, 0, 0, 0}] = "Window"
+			}
+		},
+		exclude = {},
+		modifier = "Window",
+		layer = "wall_outer"
+	},
+	{
+		include = {
+			wall_inner = {
+				[{1, 0, 0, 2}] = "Window"
+			}
+		},
+		exclude = {},
+		modifier = "Window",
+		layer = "wall_outer"
+	}
+}
+
+
+local function cell_matches_transformation_rule(
+	layers: {[string]: plot.gridlayer},
+	pos: position.position,
+	transformation: transformation
+): boolean
+	local allIncluded = true
+	local anyExcluded = false
+	for layerName, rules in transformation.include do
+		for offset, name in rules do
+			local newPos = position.translate(pos, offset[1], offset[2], offset[3], offset[4])
+			local asset = plot.gridlayer_get_asset(layers[layerName], newPos)
+			allIncluded = allIncluded and asset:find(name)
+		end
+	end
+	for layerName, rules in transformation.exclude do
+		for offset, name in rules do
+			local newPos = position.translate(pos, offset[1], offset[2], offset[3], offset[4])
+			local asset = plot.gridlayer_get_asset(layers[layerName], newPos)
+			anyExcluded = anyExcluded or not asset:find(name)
+		end
+	end
+	return allIncluded
+end
+
+
+local function transformation_rule_get_positions(rule: transformation, pos: position.position, result: {[string]: {position.position}})
+	result[rule.layer] = result[rule.layer] or {}
+	table.insert(result[rule.layer], pos)
+
+	for layerName, rules in rule.include do
+		result[layerName] = result[layerName] or {}
+		for offset in rules do
+			local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+			newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+			table.insert(result[layerName], newPos)
+			table.insert(result[rule.layer], newPos)
+		end
+	end
+
+	for layerName, rules in rule.exclude do
+		result[layerName] = result[layerName] or {}
+		for offset in rules do
+			local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+			newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+			table.insert(result[layerName], newPos)
+			table.insert(result[rule.layer], newPos)
+		end
+	end
+end
+
+
+local function transformation_rules_get_positions(pos: position.position, result: {[string]: {position.position}})
+	for _, rule in transformation_rules do
+		transformation_rule_get_positions(rule, pos, result)
 	end
 end
 
@@ -49,59 +168,63 @@ local function cell_update(
 	pos: position.position,
 	dirty: {position.position}
 )
-	for layerName, layer in back do
-		local assetName = plot.gridlayer_get_asset(layer, pos)
-		plot.gridlayer_set_asset(front[layerName], pos, assetName)
-	end
-
-	local pos_opposite = position.translate(pos, 1, 0, 0, 2)
-	local asset = plot.gridlayer_get_asset(back.wall_inner, pos)
-	local asset_opposite = plot.gridlayer_get_asset(back.wall_inner, pos_opposite)
-	if asset:find("Window") or asset_opposite:find("Window") then
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
-		if not asset1:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".Window")
-			table.insert(dirty, pos)
-		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
-		if not asset2:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2 .. ".Window")
-			table.insert(dirty, pos_opposite)
-		end
-	else
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
-		if asset1:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1:split(".Window")[1])
-			table.insert(dirty, pos)
-		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
-		if asset2:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2:split(".Window")[1])
-			table.insert(dirty, pos_opposite)
+	local positions_to_check = {}
+	transformation_rules_get_positions(pos, positions_to_check)
+	for layerName, positions in positions_to_check do
+		for _, newPos in positions do
+			plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
+			table.insert(dirty, newPos)
 		end
 	end
 
-	if asset:find("DoorSingle") or asset_opposite:find("DoorSingle") then
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
-		if not asset1:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".DoorSingle")
-			table.insert(dirty, pos)
+	for _, rule in transformation_rules do
+		if cell_matches_transformation_rule(back, pos, rule) then
+			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
+			if not asset:find(rule.modifier) then
+				plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+			end
 		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, position.translate(pos, 1, 0, 0, 2))
-		if not asset2:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, position.translate(pos, 1, 0, 0, 2), asset2 .. ".DoorSingle")
-			table.insert(dirty, pos_opposite)
+		for _, rules in rule.include do
+			for offset in rules do
+				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+				if cell_matches_transformation_rule(back, newPos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
+					if not asset:find(rule.modifier) then
+						plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+					end
+				end
+			end
 		end
-	else
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
-		if asset1:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1:split(".DoorSingle")[1])
-			table.insert(dirty, pos)
+		for _, rules in rule.exclude do
+			for offset in rules do
+				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+				if cell_matches_transformation_rule(back, newPos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
+					if not asset:find(rule.modifier) then
+						plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+					end
+				end
+			end
 		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
-		if asset2:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2:split(".DoorSingle")[1])
-			table.insert(dirty, pos_opposite)
+	end
+end
+
+
+local function cell_init(
+	back: {[string]: plot.gridlayer},
+	front: {[string]: plot.gridlayer},
+	pos: position.position
+)
+	for layerName in back do	
+		local asset = plot.gridlayer_get_asset(back[layerName], pos)
+		plot.gridlayer_set_asset(front[layerName], pos, asset)
+	end
+	for _, rule in transformation_rules do
+		if cell_matches_transformation_rule(back, pos, rule) then
+			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
+			plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
 		end
 	end
 end
@@ -131,22 +254,39 @@ function plot.update_execute_all(p)
 end
 
 
-local function push_update_all(p)
-	local heights = {}
+local function plot_init(p: plot.plot)
+	plot.allPlots[p.folder] = p
+	local layers_by_height_front = {}
+	local layers_by_height_back = {}
+	for _, layer in p.layers_computed do
+		local height = layer.height
+		layers_by_height_front[height] = layers_by_height_front[height] or {}
+		layers_by_height_front[height][layer.name] = layer
+	end
 	for _, layer in p.layers do
-		if heights[layer.height] then
-			continue
-		end
+		local height = layer.height
+		layers_by_height_back[height] = layers_by_height_back[height] or {}
+		layers_by_height_back[height][layer.name] = layer
+	end
+	local models = p.folder:FindFirstChild("Models")
+	if models == nil then
+		return
+	end
 
-		heights[layer.height] = true
+	for height, front in layers_by_height_front do
 		for x = 1, p.size.X do
 			for z = 1, p.size.Y do
 				for rot = 0, 3 do
-					plot.update_push({
-						pos = Vector3.new(x-1, layer.height, z-1),
+					local pos = {
+						pos = Vector3.new(x-1, height, z-1),
 						rot = rot,
 						plot = p.folder
-					})
+					}
+					
+					cell_init(layers_by_height_back[height], front, pos)
+					for _, layer in front do
+						plot.layers[layer.type].build_cell(p, layer, pos, models)
+					end
 				end
 			end
 		end
@@ -156,8 +296,7 @@ end
 
 function plot.build(p)
 	if plot.allPlots[p.folder] == nil then
-		plot.allPlots[p.folder] = p
-		push_update_all(p)
+		plot_init(p)
 	end
 	plot_merge(plot.allPlots[p.folder], p)
 	
