@@ -202,15 +202,6 @@ local function transformation_rules_get_positions(pos: position.position, result
 end
 
 
-local function cell_update_single(
-	rule: transformation,
-	back: {[string]: plot.gridlayer},
-	front: {[string]: plot.gridlayer},
-	pos: position.position
-)
-end
-
-
 local function cell_update(
 	back: {[string]: plot.gridlayer},
 	front: {[string]: plot.gridlayer},
