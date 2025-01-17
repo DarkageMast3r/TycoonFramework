@@ -121,29 +121,55 @@ local function cell_matches_transformation_rule(
 end
 
 
+local function transformation_rule_get_positions(rule: transformation, pos: position.position, result: {[string]: {position.position}})
+	result[rule.layer] = result[rule.layer] or {}
+	table.insert(result[rule.layer], pos)
+
+	for layerName, rules in rule.include do
+		result[layerName] = result[layerName] or {}
+		for offset in rules do
+			local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+			newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+			table.insert(result[layerName], newPos)
+			table.insert(result[rule.layer], newPos)
+		end
+	end
+
+	for layerName, rules in rule.exclude do
+		result[layerName] = result[layerName] or {}
+		for offset in rules do
+			local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+			newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+			table.insert(result[layerName], newPos)
+			table.insert(result[rule.layer], newPos)
+		end
+	end
+end
+
+
+local function transformation_rules_get_positions(pos: position.position, result: {[string]: {position.position}})
+	for _, rule in transformation_rules do
+		transformation_rule_get_positions(rule, pos, result)
+	end
+end
+
+
 local function cell_update(
 	back: {[string]: plot.gridlayer},
 	front: {[string]: plot.gridlayer},
 	pos: position.position,
 	dirty: {position.position}
 )
-	local pos_opposite = position.translate(pos, 1, 0, 0, 2)
-	for _, rule in transformation_rules do
-		for layerName, rules in rule.include do
-			for offset in rules do
-				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
-				newPos = position.translate(newPos, offset[1], offset[2], offset[3], 0)
-				plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
-				table.insert(dirty, newPos)
-			end
-		end
-		for layerName, rules in rule.exclude do
-			for offset in rules do
-				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
-				newPos = position.translate(newPos, offset[1], offset[2], offset[3], 0)
-				plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
-				table.insert(dirty, newPos)
-			end
+	local positions_to_check = {}
+	transformation_rules_get_positions(pos, positions_to_check)
+	if time() > 5 then
+		print(pos)
+		print(positions_to_check)
+	end
+	for layerName, positions in positions_to_check do
+		for _, newPos in positions do
+			plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
+			table.insert(dirty, newPos)
 		end
 	end
 
@@ -151,7 +177,11 @@ local function cell_update(
 		local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
 		plot.gridlayer_set_asset(front[rule.layer], pos, asset)
 		table.insert(dirty, pos)
+		if time() > 5 then
+			print(rule.layer, asset, pos)
+		end
 	end
+
 	for _, rule in transformation_rules do
 		if cell_matches_transformation_rule(back, pos, rule) then
 			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
@@ -179,6 +209,7 @@ local function cell_update(
 		end
 	end
 
+	local pos_opposite = position.translate(pos, 1, 0, 0, 2)
 	local asset = plot.gridlayer_get_asset(back.wall_inner, pos)
 	local asset_opposite = plot.gridlayer_get_asset(back.wall_inner, pos_opposite)
 	if asset:find("Window") or asset_opposite:find("Window") then
