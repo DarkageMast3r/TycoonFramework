@@ -180,7 +180,9 @@ local function cell_update(
 	for _, rule in transformation_rules do
 		if cell_matches_transformation_rule(back, pos, rule) then
 			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
-			plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+			if not asset:find(rule.modifier) then
+				plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+			end
 		end
 		for _, rules in rule.include do
 			for offset in rules do
@@ -188,7 +190,9 @@ local function cell_update(
 				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
 				if cell_matches_transformation_rule(back, newPos, rule) then
 					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
-					plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+					if not asset:find(rule.modifier) then
+						plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+					end
 				end
 			end
 		end
@@ -198,7 +202,9 @@ local function cell_update(
 				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
 				if cell_matches_transformation_rule(back, newPos, rule) then
 					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
-					plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+					if not asset:find(rule.modifier) then
+						plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+					end
 				end
 			end
 		end
