@@ -63,6 +63,46 @@ type transformation = {
 local transformation_rules: {transformation} = {
 	{
 		include = {
+			floor = {
+				[{0, 0, 0, 0}] = "Wood"
+			}
+		},
+		exclude = {},
+		modifier = "Trim",
+		layer = "wall_outer"
+	},
+	{
+		include = {
+			floor = {
+				[{0, 0, 0, 1}] = "Wood"
+			}
+		},
+		exclude = {},
+		modifier = "Trim",
+		layer = "wall_outer"
+	},
+	{
+		include = {
+			floor = {
+				[{0, 0, 0, 2}] = "Wood"
+			}
+		},
+		exclude = {},
+		modifier = "Trim",
+		layer = "wall_outer"
+	},
+	{
+		include = {
+			floor = {
+				[{0, 0, 0, 3}] = "Wood"
+			}
+		},
+		exclude = {},
+		modifier = "Trim",
+		layer = "wall_outer"
+	},
+	{
+		include = {
 			wall_inner = {
 				[{0, 0, 0, 0}] = "DoorSingle"
 			}
@@ -224,7 +264,9 @@ local function cell_init(
 	for _, rule in transformation_rules do
 		if cell_matches_transformation_rule(back, pos, rule) then
 			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
-			plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+			if asset ~= "" then
+				plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+			end
 		end
 	end
 end
