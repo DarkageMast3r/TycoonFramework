@@ -162,23 +162,10 @@ local function cell_update(
 )
 	local positions_to_check = {}
 	transformation_rules_get_positions(pos, positions_to_check)
-	if time() > 5 then
-		print(pos)
-		print(positions_to_check)
-	end
 	for layerName, positions in positions_to_check do
 		for _, newPos in positions do
 			plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
 			table.insert(dirty, newPos)
-		end
-	end
-
-	for _, rule in transformation_rules do
-		local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
-		plot.gridlayer_set_asset(front[rule.layer], pos, asset)
-		table.insert(dirty, pos)
-		if time() > 5 then
-			print(rule.layer, asset, pos)
 		end
 	end
 
@@ -190,55 +177,58 @@ local function cell_update(
 		for _, rules in rule.include do
 			for offset in rules do
 				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
-				newPos = position.translate(newPos, offset[1], offset[2], offset[3], 0)
-				if cell_matches_transformation_rule(back, pos, rule) then
-					local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
-					plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+				if cell_matches_transformation_rule(back, newPos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
+					plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
 				end
 			end
 		end
 		for _, rules in rule.exclude do
 			for offset in rules do
 				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
-				newPos = position.translate(newPos, offset[1], offset[2], offset[3], 0)
-				if cell_matches_transformation_rule(back, pos, rule) then
-					local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
-					plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+				if cell_matches_transformation_rule(back, newPos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
+					plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
 				end
 			end
 		end
 	end
+end
 
-	local pos_opposite = position.translate(pos, 1, 0, 0, 2)
-	local asset = plot.gridlayer_get_asset(back.wall_inner, pos)
-	local asset_opposite = plot.gridlayer_get_asset(back.wall_inner, pos_opposite)
-	if asset:find("Window") or asset_opposite:find("Window") then
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
-		if not asset1:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".Window")
-			table.insert(dirty, pos)
+
+local function layers_update(
+	back: {[string]: plot.gridlayer},
+	front: {[string]: plot.gridlayer},
+	pos: position.position
+)
+	for _, rule in transformation_rules do
+		if cell_matches_transformation_rule(back, pos, rule) then
+			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
+			plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
 		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
-		if not asset2:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2 .. ".Window")
-			table.insert(dirty, pos_opposite)
+		for _, rules in rule.include do
+			for offset in rules do
+				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+				if cell_matches_transformation_rule(back, newPos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
+					plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+				end
+			end
+		end
+		for _, rules in rule.exclude do
+			for offset in rules do
+				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
+				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+				if cell_matches_transformation_rule(back, newPos, rule) then
+					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
+					plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+				end
+			end
 		end
 	end
-
-	--[[
-	if asset:find("DoorSingle") or asset_opposite:find("DoorSingle") then
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
-		if not asset1:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".DoorSingle")
-			table.insert(dirty, pos)
-		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, position.translate(pos, 1, 0, 0, 2))
-		if not asset2:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, position.translate(pos, 1, 0, 0, 2), asset2 .. ".DoorSingle")
-			table.insert(dirty, pos_opposite)
-		end
-	end
-	]]
 end
 
 
@@ -289,10 +279,66 @@ local function push_update_all(p)
 end
 
 
+local function plot_init(p: plot.plot)
+	plot.allPlots[p.folder] = p
+	local layers_by_height_front = {}
+	local layers_by_height_back = {}
+	for _, layer in p.layers_computed do
+		local height = layer.height
+		layers_by_height_front[height] = layers_by_height_front[height] or {}
+		layers_by_height_front[height][layer.name] = layer
+	end
+	for _, layer in p.layers do
+		local height = layer.height
+		layers_by_height_back[height] = layers_by_height_back[height] or {}
+		layers_by_height_back[height][layer.name] = layer
+	end
+	local models = p.folder:FindFirstChild("Models")
+	if models == nil then
+		return
+	end
+
+	for height, back in layers_by_height_back do
+		for x = 1, p.size.X do
+			for z = 1, p.size.Y do
+				for rot = 0, 3 do
+					local pos = {
+						pos = Vector3.new(x-1, height, z-1),
+						rot = rot,
+						plot = p.folder
+					}
+					for layerName, layer in back do
+						local asset = plot.gridlayer_get_asset(layer, pos)
+						plot.gridlayer_set_asset(layers_by_height_front[height][layerName], pos, asset)
+					end
+				end
+			end
+		end
+	end
+	for height, front in layers_by_height_front do
+		for x = 1, p.size.X do
+			for z = 1, p.size.Y do
+				for rot = 0, 3 do
+					local pos = {
+						pos = Vector3.new(x-1, height, z-1),
+						rot = rot,
+						plot = p.folder
+					}
+					
+					layers_update(layers_by_height_back[height], front, pos)
+					for _, layer in front do
+						plot.layers[layer.type].build_cell(p, layer, pos, models)
+					end
+				end
+			end
+		end
+	end
+end
+
+
 function plot.build(p)
 	if plot.allPlots[p.folder] == nil then
-		plot.allPlots[p.folder] = p
-		push_update_all(p)
+		plot_init(p)
 	end
 	plot_merge(plot.allPlots[p.folder], p)
 	
