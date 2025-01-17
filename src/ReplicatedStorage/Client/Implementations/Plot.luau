@@ -217,35 +217,19 @@ local function cell_update(
 		end
 	end
 
-	for _, rule in transformation_rules do
-		if cell_matches_transformation_rule(back, pos, rule) then
-			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
-			if not asset:find(rule.modifier) then
-				plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
-			end
-		end
-		for _, rules in rule.include do
-			for offset in rules do
-				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
-				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
+	for layerName, positions in positions_to_check do
+		for _, newPos in positions do
+			local assets_staged = {}
+			for _, rule in transformation_rules do
 				if cell_matches_transformation_rule(back, newPos, rule) then
-					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
-					if not asset:find(rule.modifier) then
-						plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
+					local asset = assets_staged[rule.layer] or plot.gridlayer_get_asset(back[rule.layer], newPos)
+					if not asset:find(rule.modifier) and asset ~= "" then
+						assets_staged[rule.layer] = asset .. "." .. rule.modifier
 					end
 				end
 			end
-		end
-		for _, rules in rule.exclude do
-			for offset in rules do
-				local newPos = position.translate(pos, 0, 0, 0, -offset[4])
-				newPos = position.translate(newPos, -offset[1], -offset[2], -offset[3], 0)
-				if cell_matches_transformation_rule(back, newPos, rule) then
-					local asset = plot.gridlayer_get_asset(back[rule.layer], newPos)
-					if not asset:find(rule.modifier) then
-						plot.gridlayer_set_asset(front[rule.layer], newPos, asset .. "." .. rule.modifier)
-					end
-				end
+			for layer_name, asset in assets_staged do
+				plot.gridlayer_set_asset(front[layer_name], newPos, asset)
 			end
 		end
 	end
@@ -261,13 +245,17 @@ local function cell_init(
 		local asset = plot.gridlayer_get_asset(back[layerName], pos)
 		plot.gridlayer_set_asset(front[layerName], pos, asset)
 	end
+	local assets_staged = {}
 	for _, rule in transformation_rules do
 		if cell_matches_transformation_rule(back, pos, rule) then
-			local asset = plot.gridlayer_get_asset(back[rule.layer], pos)
-			if asset ~= "" then
-				plot.gridlayer_set_asset(front[rule.layer], pos, asset .. "." .. rule.modifier)
+			local asset = assets_staged[rule.layer] or plot.gridlayer_get_asset(back[rule.layer], pos)
+			if asset ~= "" and not asset:find(rule.modifier) then
+				assets_staged[rule.layer] = asset .. "." .. rule.modifier
 			end
 		end
+	end
+	for layer_name, asset in assets_staged do
+		plot.gridlayer_set_asset(front[layer_name], pos, asset)
 	end
 end
 
