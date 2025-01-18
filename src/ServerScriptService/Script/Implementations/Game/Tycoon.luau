@@ -29,7 +29,6 @@ local function plot_callback_query<t>(collection: plot_callback<t>, asset: strin
 		return result
 	end
 	for asset_query, callbacks in collection[layer] do
-		print(asset_query, asset, callbacks)
 		if asset:find(asset_query) then
 			for _, callback in callbacks do
 				table.insert(result, callback)
@@ -66,11 +65,9 @@ function Tycoon.build(
 	local callbacks = plot_callback_query(callbacks_build, assetName, layer)
 	for _, position in DragModes.get_positions(layer, from, to, dragmode) do
 		if Plot.get_asset(position, layer) ~= "" then
-			print(`Asset already exists at {position.pos} {layer} ({Plot.get_asset(position, layer)})`)
 			continue
 		end
 		if assetInfo.price > playerData.currency then
-			print("Cannot afford")
 			break
 		end
 		playerData.currency -= assetInfo.price
