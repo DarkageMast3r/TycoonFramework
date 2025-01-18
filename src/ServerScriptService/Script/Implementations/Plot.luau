@@ -11,6 +11,7 @@ local plot = require(common.Plot)
 local asset = require(common.Asset.Asset)
 local data = require(contracts.Data)
 local nodegraph = require(common.Data.Nodegraph)
+local Tycoon = require(common.Game.Tycoon)
 
 
 function plot.create_from_folder(folder)
@@ -85,7 +86,8 @@ function plot.gridlayer_attach(plot, type, name, height)
 		collision = table.create(asset_count, false),
 		assets = table.create(asset_count, ""),
 		assets_built = {},
-		assets_models = {}
+		assets_models = {},
+		metadata = {}
 	})
 	table.insert(plot.layers_computed, {
 		type = type,
@@ -94,7 +96,8 @@ function plot.gridlayer_attach(plot, type, name, height)
 		collision = table.create(asset_count, false),
 		assets = table.create(asset_count, ""),
 		assets_built = {},
-		assets_models = {}
+		assets_models = {},
+		metadata = {}
 	})
 end
 
@@ -185,6 +188,7 @@ end
 
 function plot.load(p, player)
 	local serialized = data.load_plot(player)
+	local last = tick()
 	for _, layer in serialized.layers do
 		local gridlayer = plot.gridlayer_get(p, layer.name, layer.height)
 		if gridlayer == nil then
@@ -199,6 +203,13 @@ function plot.load(p, player)
 			pos = position.translate(pos, 0, 0, layer.height, 0)
 			local mesh = asset.collisionmesh_get(assetName)
 			plot.collisionmesh_place(pos, mesh)
+
+			Tycoon.on_build_fire(p, pos, assetName, layer.name)
+			local cur = tick()
+			if cur - last > 1/60 then
+				task.wait()
+				last = tick()
+			end
 		end
 	end
 	p.dirty = true

@@ -4,23 +4,19 @@ local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local contracts = script.Contracts
 local common = replicatedStorage.Common
-local plot = require(common.Plot)
-local position = require(common.Data.Position)
-local replication = require(common.Replication)
-local asset = require(common.Asset.Asset)
-local actor = require(common.Actor.Actor)
-local customer = require(common.Actor.Customer)
-local dragModes = require(common.DragModes)
+local Plot = require(common.Plot)
+local Replication = require(common.Replication)
+local Actor = require(common.Actor.Actor)
+local Customer = require(common.Actor.Customer)
 local Data = require(contracts.Data)
-local tycoon = require(common.Game.Tycoon)
+local Tycoon = require(common.Game.Tycoon)
 
-
-local bootload = require(script.Bootloader)
+local Bootload = require(script.Bootloader)
 
 
 local function update(dt: number)
-	actor.tick(dt)
-	customer.tick(dt)
+	Actor.tick(dt)
+	Customer.tick(dt)
 
 	for _, player in players:GetPlayers() do
 		Data.replicate_data(player)
@@ -39,30 +35,30 @@ local function player_join(player: Player)
 		sessionData.currency = 1000000
 	end
 	
-	local p1 = plot.create_from_folder(workspace.Grid1)
-	plot.gridlayer_attach(p1, "center", "floor", 0)
-	plot.gridlayer_attach(p1, "edge", "wall_inner", 0)
-	plot.gridlayer_attach(p1, "edge", "wall_outer", 0)
-	plot.gridlayer_attach(p1, "center", "ceiling", 0)
-	plot.gridlayer_attach(p1, "edge", "asset", 0)
-	plot.gridlayer_attach(p1, "edge", "light", 0)
-	plot.gridlayer_attach(p1, "center", "floor", 1)
-	plot.gridlayer_attach(p1, "edge", "wall_inner", 1)
-	plot.gridlayer_attach(p1, "edge", "wall_outer", 1)
-	plot.gridlayer_attach(p1, "center", "ceiling", 1)
-	plot.gridlayer_attach(p1, "edge", "asset", 1)
-	plot.gridlayer_attach(p1, "edge", "light", 1)
-	plot.gridlayer_attach(p1, "center", "floor", 2)
-	plot.gridlayer_attach(p1, "edge", "wall_inner", 2)
-	plot.gridlayer_attach(p1, "edge", "wall_outer", 2)
-	plot.gridlayer_attach(p1, "center", "ceiling", 2)
-	plot.gridlayer_attach(p1, "edge", "asset", 2)
-	plot.gridlayer_attach(p1, "edge", "light", 2)
+	local p1 = Plot.create_from_folder(workspace.Grid1)
+	Plot.gridlayer_attach(p1, "center", "floor", 0)
+	Plot.gridlayer_attach(p1, "edge", "wall_inner", 0)
+	Plot.gridlayer_attach(p1, "edge", "wall_outer", 0)
+	Plot.gridlayer_attach(p1, "center", "ceiling", 0)
+	Plot.gridlayer_attach(p1, "edge", "asset", 0)
+	Plot.gridlayer_attach(p1, "edge", "light", 0)
+	Plot.gridlayer_attach(p1, "center", "floor", 1)
+	Plot.gridlayer_attach(p1, "edge", "wall_inner", 1)
+	Plot.gridlayer_attach(p1, "edge", "wall_outer", 1)
+	Plot.gridlayer_attach(p1, "center", "ceiling", 1)
+	Plot.gridlayer_attach(p1, "edge", "asset", 1)
+	Plot.gridlayer_attach(p1, "edge", "light", 1)
+	Plot.gridlayer_attach(p1, "center", "floor", 2)
+	Plot.gridlayer_attach(p1, "edge", "wall_inner", 2)
+	Plot.gridlayer_attach(p1, "edge", "wall_outer", 2)
+	Plot.gridlayer_attach(p1, "center", "ceiling", 2)
+	Plot.gridlayer_attach(p1, "edge", "asset", 2)
+	Plot.gridlayer_attach(p1, "edge", "light", 2)
 
-	plot.claim(p1, player)
-	plot.replicate(p1)
+	Plot.claim(p1, player)
+	Plot.replicate(p1)
 	
-	customer.spawn({
+	Customer.spawn({
 		pos = Vector3.new(0, 0, 0),
 		rot = 0,
 		plot = p1.folder
@@ -71,32 +67,53 @@ end
 
 
 local function player_leave(player: Player)
-	for _, p in plot.get_by_owner(player) do
-		plot.save(p)
+	for _, p in Plot.get_by_owner(player) do
+		Plot.save(p)
 	end
 end
 
 
 local function main()
-	bootload()
-	replication.bind_event(
+	Bootload()
+	Replication.bind_event(
 		replicatedStorage.Remotes.PlotBuildEvent,
-		tycoon.build,
+		Tycoon.build,
 		"Player",
 		"Vector3",
 		"position",
 		"string",
 		"string"
 	)
-	replication.bind_event(
+	Replication.bind_event(
 		replicatedStorage.Remotes.PlotDeleteEvent,
-		tycoon.delete,
+		Tycoon.delete,
 		"Player",
 		"Vector3", -- From
 		"position", -- To
 		"string", -- Layer,
 		"string" -- dragMode
 	)
+
+	Tycoon.on_build("Drawer", "asset", function(plot, position, asset, layer)
+		local gridlayer = Plot.gridlayer_get(plot, layer, position.pos.Y)
+		if gridlayer == nil then
+			return
+		end
+		Plot.gridlayer_set_metadata(gridlayer, position, {
+			apples = math.random(1, 10),
+			bananas = math.random(1, 10)
+		})
+		local metadata = Plot.gridlayer_get_metadata(gridlayer, position)
+		print(metadata)
+	end)
+	Tycoon.on_delete("Drawer", "asset", function(plot, position, asset, layer)
+		local gridlayer = Plot.gridlayer_get(plot, layer, position.pos.Y)
+		if gridlayer == nil then
+			return
+		end
+		local metadata = Plot.gridlayer_get_metadata(gridlayer, position)
+		print(metadata)
+	end)
 end
 
 

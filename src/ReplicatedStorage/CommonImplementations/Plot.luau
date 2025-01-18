@@ -84,8 +84,7 @@ function plot.gridlayer_get_asset(gridlayer, pos)
 	if p == nil then
 		return ""
 	end
-	local layer = plot.layers[gridlayer.type]
-	local idx = layer.get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	return gridlayer.assets[idx] or ""
 end
 
@@ -122,8 +121,7 @@ function plot.gridlayer_set_asset(gridlayer, pos, asset)
 	if p == nil then
 		return false
 	end
-	local layer = plot.layers[gridlayer.type]
-	local idx = layer.get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	if gridlayer.assets[idx] == nil then
 		return false
 	end
@@ -131,6 +129,26 @@ function plot.gridlayer_set_asset(gridlayer, pos, asset)
 	gridlayer.assets[idx] = asset
 	plotquery_position_update(p, pos, gridlayer.name, asset, true)
 	return true
+end
+
+
+function plot.gridlayer_get_metadata(gridlayer, pos): any
+	local p = plot.get_by_folder(pos.plot)
+	if p == nil then
+		return nil
+	end
+	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	return gridlayer.metadata[idx]
+end
+
+
+function plot.gridlayer_set_metadata(gridlayer, pos, metadata)
+	local p = plot.get_by_folder(pos.plot)
+	if p == nil then
+		return
+	end
+	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	gridlayer.metadata[idx] = metadata
 end
 
 

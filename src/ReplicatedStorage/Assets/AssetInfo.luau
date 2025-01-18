@@ -9,6 +9,9 @@ return {
 	["Asset.Chair"] = {
 		price = 25
 	},
+	["Asset.Drawer"] = {
+		price = 50
+	},
 	["Asset.Table"] = {
 		price = 50
 	},

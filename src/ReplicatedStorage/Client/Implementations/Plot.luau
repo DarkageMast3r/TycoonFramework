@@ -155,14 +155,14 @@ local function cell_matches_transformation_rule(
 		for offset, name in rules do
 			local newPos = position.translate(pos, offset[1], offset[2], offset[3], offset[4])
 			local asset = plot.gridlayer_get_asset(layers[layerName], newPos)
-			allIncluded = allIncluded and asset:find(name)
+			allIncluded = allIncluded and asset:find(name) ~= nil
 		end
 	end
 	for layerName, rules in transformation.exclude do
 		for offset, name in rules do
 			local newPos = position.translate(pos, offset[1], offset[2], offset[3], offset[4])
 			local asset = plot.gridlayer_get_asset(layers[layerName], newPos)
-			anyExcluded = anyExcluded or not asset:find(name)
+			anyExcluded = anyExcluded or asset:find(name) == nil
 		end
 	end
 	return allIncluded
@@ -210,9 +210,11 @@ local function cell_update(
 )
 	local positions_to_check = {}
 	transformation_rules_get_positions(pos, positions_to_check)
-	for layerName, positions in positions_to_check do
+	for _, positions in positions_to_check do
 		for _, newPos in positions do
-			plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
+			for layerName in back do
+				plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
+			end
 			table.insert(dirty, newPos)
 		end
 	end
