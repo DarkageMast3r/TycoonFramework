@@ -13,5 +13,8 @@ return {} :: {
 	delete: (player: Player, from: Vector3, to: Position.position, layer: string, dragmode: string) -> (),
 
 	on_build: (asset: string, layer: string, callback: asset_build_callback) -> (),
-	on_delete: (asset: string, layer: string, callback: asset_delete_callback) -> ()
+	on_delete: (asset: string, layer: string, callback: asset_delete_callback) -> (),
+
+	on_build_fire: (Plot.plot, Position.position, asset: string, layer: string) -> (),
+	on_delete_fire: (Plot.plot, Position.position, asset: string, layer: string) -> ()
 }

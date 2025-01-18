@@ -57,7 +57,6 @@ elements.on_click(btn_select_walls, function()
 	toolbar.fill(lst_toolbar, {
 		"Wall_Outer.Brick",
 		"Wall_Outer.Plaster",
-		"Wall_Outer.Plaster.Trim",
 		"Wall_Outer.Brick.Ledge",
 		"Wall_Outer.Concrete.Ledge"
 	}, function(name)
@@ -96,6 +95,7 @@ elements.on_click(btn_select_assets, function()
 		"Asset.Table",
 		"Asset.Table.Corner",
 		"Asset.Checkout",
+		"Asset.Drawer",
 	}, function(name)
 		cursor.set_state_build()
 		cursor.asset_select(name)

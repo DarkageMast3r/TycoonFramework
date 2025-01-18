@@ -11,6 +11,7 @@ local plot = require(common.Plot)
 local asset = require(common.Asset.Asset)
 local data = require(contracts.Data)
 local nodegraph = require(common.Data.Nodegraph)
+local Tycoon = require(common.Game.Tycoon)
 
 
 function plot.create_from_folder(folder)
@@ -187,6 +188,8 @@ end
 
 function plot.load(p, player)
 	local serialized = data.load_plot(player)
+	local processed = 0
+	local last = tick()
 	for _, layer in serialized.layers do
 		local gridlayer = plot.gridlayer_get(p, layer.name, layer.height)
 		if gridlayer == nil then
@@ -201,6 +204,16 @@ function plot.load(p, player)
 			pos = position.translate(pos, 0, 0, layer.height, 0)
 			local mesh = asset.collisionmesh_get(assetName)
 			plot.collisionmesh_place(pos, mesh)
+
+			Tycoon.on_build_fire(p, pos, assetName, layer.name)
+			processed += 1
+			local cur = tick()
+			if cur - last > 1/60 then
+				print(`Procedded {processed} in {(cur-last) * 1000} ms`)
+				task.wait()
+				last = tick()
+				processed = 0
+			end
 		end
 	end
 	p.dirty = true

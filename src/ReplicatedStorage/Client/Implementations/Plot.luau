@@ -210,9 +210,11 @@ local function cell_update(
 )
 	local positions_to_check = {}
 	transformation_rules_get_positions(pos, positions_to_check)
-	for layerName, positions in positions_to_check do
+	for _, positions in positions_to_check do
 		for _, newPos in positions do
-			plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
+			for layerName in back do
+				plot.gridlayer_set_asset(front[layerName], newPos, plot.gridlayer_get_asset(back[layerName], newPos))
+			end
 			table.insert(dirty, newPos)
 		end
 	end
