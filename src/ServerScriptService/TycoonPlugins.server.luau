@@ -12,6 +12,16 @@ local function bootload_folder(folder: Folder)
 		end
 	end
 end
+
+
+local function apply_plugin_style()
+	elements.style_push()
+	elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
+	elements.style_set_color("txt_primary", Color3.new(0, 0, 0))
+	elements.style_set_color("txt_unselected", Color3.new(0, 0, 0))
+	elements.style_set_number("font_size", 10)
+end
+
 print("Bootloading plugin")
 bootload_folder(replicatedStorage.Client.Implementations.UI)
 
@@ -187,6 +197,7 @@ end
 
 
 local function selectItem()
+	apply_plugin_style()
 	local selected = selection:Get()[1]
 	while selected.Parent ~= nil and not selected:IsA("Model") do
 		selected = selected.Parent
@@ -215,6 +226,7 @@ local function selectItem()
 			createEdgeGrid(content, 3)
 		end)
 	end
+	elements.style_pop()
 end
 
 
@@ -223,6 +235,8 @@ pluginButton.Click:Connect(function()
 	if not widget.Enabled then
 		return
 	end
+	apply_plugin_style()
+	
 	elements.clear(frame)
 	local topbar = elements.create_frame(frame, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0))
 	frame_content = elements.create_frame(frame, UDim2.new(1, 0, 1, -25), UDim2.new(0, 0, 0, 25))
@@ -232,4 +246,6 @@ pluginButton.Click:Connect(function()
 	local btn_save = elements.create_pill(topbar_list, "Save")
 	elements.on_click(btn_select, selectItem)
 	elements.on_click(btn_save, saveItem)
+	
+	elements.style_pop()
 end)

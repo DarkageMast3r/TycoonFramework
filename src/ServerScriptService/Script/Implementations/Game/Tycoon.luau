@@ -11,6 +11,27 @@ local Asset = require(common.Asset.Asset)
 local DragModes = require(common.DragModes)
 local Data = require(contracts.Data)
 
+type plot_callback<t> = {[string]: {[string]: {t}}}
+local callbacks_build: plot_callback<Tycoon.asset_build_callback> = {}
+local callbacks_delete: plot_callback<Tycoon.asset_delete_callback> = {}
+
+
+local function plot_callback_query<t>(collection: plot_callback<t>, asset: string, layer: string): {t}
+	local result = {}
+	if collection[layer] == nil then
+		return result
+	end
+	for asset_query, callbacks in collection[layer] do
+		if asset:find(asset_query) then
+			for _, callback in callbacks do
+				table.insert(result, callback)
+			end
+		end
+	end
+	return result
+end
+
+
 function Tycoon.build(
 	player: Player,
 	from: Vector3,
@@ -34,6 +55,7 @@ function Tycoon.build(
 	local playerData = Data.load_data(player)
 
 	local layer = Asset.resolve_type(assetName)
+	local callbacks = plot_callback_query(callbacks_build, assetName, layer)
 	for _, position in DragModes.get_positions(layer, from, to, dragmode) do
 		if Plot.get_asset(position, layer) ~= "" then
 			continue
@@ -43,6 +65,9 @@ function Tycoon.build(
 		end
 		playerData.currency -= assetInfo.price
 		Plot.build_asset(position, layer, assetName)
+		for _, callback in callbacks do
+			callback(plot, position, assetName, layer)
+		end
 	end
 
 	replicatedStorage.Remotes.PlotBuildEvent:FireClient(player, from, to, layer, assetName, dragmode)
@@ -56,11 +81,11 @@ function Tycoon.delete(
 	layer: string,
 	dragmode: string
 )
-	local p = Plot.get_by_folder(to.plot)
-	if p == nil then
+	local plot = Plot.get_by_folder(to.plot)
+	if plot == nil then
 		return
 	end
-	if p.owner ~= player then
+	if plot.owner ~= player then
 		return
 	end
 
@@ -73,9 +98,27 @@ function Tycoon.delete(
 			playerData.currency += assetInfo.price
 		end
 		Plot.build_asset(position, layer, "")
+
+		for _, callback in plot_callback_query(callbacks_delete, currentAsset, layer) do
+			callback(plot, position, currentAsset, layer)
+		end
 	end
 
 	replicatedStorage.Remotes.PlotBuildEvent:FireClient(player, from, to, layer, "", dragmode)
+end
+
+
+function Tycoon.on_build(asset, layer, callback)
+	callbacks_build[layer] = callbacks_build[layer] or {}
+	callbacks_build[layer][asset] = callbacks_build[layer][asset] or {}
+	table.insert(callbacks_build[layer][asset], callback)
+end
+
+
+function Tycoon.on_delete(asset, layer, callback)
+	callbacks_delete[layer] = callbacks_delete[layer] or {}
+	callbacks_delete[layer][asset] = callbacks_delete[layer][asset] or {}
+	table.insert(callbacks_delete[layer][asset], callback)
 end
 
 

@@ -11,7 +11,8 @@ export type gridlayer = {
 	assets: {string},
 	collision: {boolean},
 	assets_built: {string},
-	assets_models: {Model}
+	assets_models: {Model},
+	metadata: {any}
 }
 
 export type plot = {
@@ -56,6 +57,8 @@ return {
 	gridlayer_get_computed: (plot: plot, name: string, height: number) -> gridlayer?,
 	gridlayer_get_asset: (layer: gridlayer, pos: position.position) -> string,
 	gridlayer_set_asset: (layer: gridlayer, pos: position.position, asset: string) -> boolean,
+	gridlayer_get_metadata: (layer: gridlayer, pos: position.position) -> any,
+	gridlayer_set_metadata: (layer: gridlayer, pos: position.position, metadata: any) -> (),
 	gridlayer_get_collision: (layer: gridlayer, pos: position.position) -> boolean,
 	gridlayer_set_collision: (layer: gridlayer, pos: position.position, filled: boolean) -> (),
 	

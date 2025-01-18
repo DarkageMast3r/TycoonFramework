@@ -85,7 +85,8 @@ function plot.gridlayer_attach(plot, type, name, height)
 		collision = table.create(asset_count, false),
 		assets = table.create(asset_count, ""),
 		assets_built = {},
-		assets_models = {}
+		assets_models = {},
+		metadata = {}
 	})
 	table.insert(plot.layers_computed, {
 		type = type,
@@ -94,7 +95,8 @@ function plot.gridlayer_attach(plot, type, name, height)
 		collision = table.create(asset_count, false),
 		assets = table.create(asset_count, ""),
 		assets_built = {},
-		assets_models = {}
+		assets_models = {},
+		metadata = {}
 	})
 end
 
