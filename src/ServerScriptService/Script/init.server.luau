@@ -95,7 +95,24 @@ local function main()
 	)
 
 	Tycoon.on_build("Drawer", "asset", function(plot, position, asset, layer)
-		print(position, asset, layer, plot.owner)
+		local gridlayer = Plot.gridlayer_get(plot, layer, position.pos.Y)
+		if gridlayer == nil then
+			return
+		end
+		Plot.gridlayer_set_metadata(gridlayer, position, {
+			apples = math.random(1, 10),
+			bananas = math.random(1, 10)
+		})
+		local metadata = Plot.gridlayer_get_metadata(gridlayer, position)
+		print(metadata)
+	end)
+	Tycoon.on_delete("Drawer", "asset", function(plot, position, asset, layer)
+		local gridlayer = Plot.gridlayer_get(plot, layer, position.pos.Y)
+		if gridlayer == nil then
+			return
+		end
+		local metadata = Plot.gridlayer_get_metadata(gridlayer, position)
+		print(metadata)
 	end)
 end
 
