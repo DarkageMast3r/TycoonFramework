@@ -10,9 +10,12 @@ local bootloaded_success = 0
 
 local OTF = {
 	Actor = require(common.Actor.Actor),
-	Asset = require(common.Asset),
+	Asset = {
+		Asset = require(common.Asset.Asset),
+		Animation = require(common.Asset.Animation)
+	},
 	Data = {
-		NodeGraph = require(common.Data.NodeGraph),
+		NodeGraph = require(common.Data.Nodegraph),
 		Position = require(common.Data.Position),
 		Program = require(common.Data.Program),
 		TeleoReactive = require(common.Data.TeleoReactive)

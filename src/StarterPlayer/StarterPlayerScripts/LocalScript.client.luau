@@ -8,7 +8,6 @@ local common = replicatedStorage.OTF.Common
 local Plot = require(common.Plot)
 local Cursor = require(contracts.Cursor)
 local ActionManager = require(contracts.ActionManager)
-local GameState = require(common.GameState)
 local Actor = require(common.Actor.Actor)
 local Replication = require(common.Replication)
 local DragModes = require(common.DragModes)
