@@ -46,8 +46,6 @@ local function bootload()
 	Asset.set_append(Asset.images, require(replicatedStorage.Assets.Images))
 	Asset.set_append(Asset.translations, require(replicatedStorage.Assets.Translations))
 	Asset.set_append(Asset.assetInfo, require(replicatedStorage.Assets.AssetInfo))
-
-	GameState.set_ready()
 end
 bootload()
 

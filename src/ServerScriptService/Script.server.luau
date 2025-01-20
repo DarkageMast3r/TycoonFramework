@@ -1,4 +1,5 @@
 --!strict
+local serverScriptService = game:GetService("ServerScriptService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
@@ -11,9 +12,7 @@ local Actor = require(common.Actor.Actor)
 local Customer = require(custom.Customer)
 local Data = require(contracts.Data)
 local Tycoon = require(common.Game.Tycoon)
-
-local Bootload = require(script.Parent.OTF.Bootloader)
-
+local OTF = require(serverScriptService.OTF)
 
 
 local function update(dt: number)
@@ -76,7 +75,8 @@ end
 
 
 local function main()
-	Bootload()
+	OTF.bootload_folder(serverScriptService.Custom.Implementations)
+	OTF.load()
 	Replication.bind_event(
 		replicatedStorage.Remotes.PlotBuildEvent,
 		Tycoon.build,
