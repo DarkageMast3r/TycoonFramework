@@ -1,12 +1,15 @@
 --!strict
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local selection = game:GetService("Selection")
-local contracts = replicatedStorage.Client.Contracts
-local elements = require(contracts.UI.Elements)
+local contracts = replicatedStorage.OTF.Client.Contracts
+local Elements = require(contracts.UI.Elements)
 
 
-local function bootload_folder(folder: Folder)
+local function bootload_folder(folder: Folder, recursive: boolean?)
 	for _, module in folder:GetChildren() do
+		if module:IsA("Folder") and recursive then
+			bootload_folder(module, recursive)
+		end
 		if module:IsA("ModuleScript") then
 			local success = pcall(require, module:Clone())
 		end
@@ -15,15 +18,15 @@ end
 
 
 local function apply_plugin_style()
-	elements.style_push()
-	elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
-	elements.style_set_color("txt_primary", Color3.new(0, 0, 0))
-	elements.style_set_color("txt_unselected", Color3.new(0, 0, 0))
-	elements.style_set_number("font_size", 10)
+	Elements.style_push()
+	Elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
+	Elements.style_set_color("txt_primary", Color3.new(0, 0, 0))
+	Elements.style_set_color("txt_unselected", Color3.new(0, 0, 0))
+	Elements.style_set_number("font_size", 10)
 end
 
 print("Bootloading plugin")
-bootload_folder(replicatedStorage.Client.Implementations.UI)
+bootload_folder(replicatedStorage.OTF.Client.Implementations.UI, true)
 
 local toolbar = plugin:CreateToolbar("Tycoon")
 local pluginButton = toolbar:CreateButton(
@@ -71,7 +74,7 @@ local colors = {
 local function createEdgeGrid(parent, size: number): Frame
 	local padding = 2
 	local imgsize = 32
-	local parentFrame = elements.create_frame(
+	local parentFrame = Elements.create_frame(
 		parent,
 		UDim2.fromOffset(
 			(padding + imgsize) * (size * 2 + 1) - padding,
@@ -83,7 +86,7 @@ local function createEdgeGrid(parent, size: number): Frame
 	local layer_selected = layers[layer_current]
 	for x = -size, size do
 		for z = -size, size do
-			local frame = elements.create_frame(
+			local frame = Elements.create_frame(
 				parentFrame,
 				UDim2.fromOffset(imgsize, imgsize),
 				UDim2.fromOffset((x+size) * (imgsize + padding), (z+size) * (imgsize + padding))
@@ -93,14 +96,14 @@ local function createEdgeGrid(parent, size: number): Frame
 			
 			for rot = 0, 3 do
 				i += 1
-				local img = elements.create_image(frame, 96753806776558)
+				local img = Elements.create_image(frame, 96753806776558)
 				img.Rotation = rot * -90
 				img.ImageColor3 = colors[layer_selected[i]]
 				indices[rot] = i
 				images[rot] = img
 			end
 			
-			elements.on_press(frame, function(x, y)
+			Elements.on_press(frame, function(x, y)
 				x -= frame.AbsolutePosition.X
 				y -= frame.AbsolutePosition.Y
 				local rot = 0
@@ -206,11 +209,11 @@ local function selectItem()
 	loadItem()
 	
 	
-	elements.clear(frame_content)
+	Elements.clear(frame_content)
 
-	local layerList_frame = elements.create_frame(frame_content, UDim2.new(0, 100, 1, 0), UDim2.new(0, 0, 0, 0))
-	local content = elements.create_frame(frame_content, UDim2.new(1, -100, 1, 0), UDim2.new(0, 100, 0, 0))
-	local list_layers = elements.create_list(layerList_frame, UDim.new(0, 5), Enum.FillDirection.Vertical)
+	local layerList_frame = Elements.create_frame(frame_content, UDim2.new(0, 100, 1, 0), UDim2.new(0, 0, 0, 0))
+	local content = Elements.create_frame(frame_content, UDim2.new(1, -100, 1, 0), UDim2.new(0, 100, 0, 0))
+	local list_layers = Elements.create_list(layerList_frame, UDim.new(0, 5), Enum.FillDirection.Vertical)
 	local layers: {[string]: string} = {
 		Wall = "wall_outer",
 		Decoration = "wall_inner",
@@ -219,33 +222,34 @@ local function selectItem()
 	}
 	
 	for name, code in layers do
-		local btn = elements.create_pill(list_layers, name, "x")
-		elements.on_click(btn, function()
-			elements.clear(content)
+		local btn = Elements.create_pill(list_layers, name, "x")
+		Elements.on_click(btn, function()
+			Elements.clear(content)
 			layer_current = code
 			createEdgeGrid(content, 3)
 		end)
 	end
-	elements.style_pop()
+	Elements.style_pop()
 end
 
 
+pluginButton:SetActive(false)
 pluginButton.Click:Connect(function()
 	widget.Enabled = not widget.Enabled
-	if not widget.Enabled then
+	if widget.Enabled then
 		return
 	end
 	apply_plugin_style()
 	
-	elements.clear(frame)
-	local topbar = elements.create_frame(frame, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0))
-	frame_content = elements.create_frame(frame, UDim2.new(1, 0, 1, -25), UDim2.new(0, 0, 0, 25))
-	local topbar_list = elements.create_list(topbar, UDim.new(0, 5))
+	Elements.clear(frame)
+	local topbar = Elements.create_frame(frame, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0))
+	frame_content = Elements.create_frame(frame, UDim2.new(1, 0, 1, -25), UDim2.new(0, 0, 0, 25))
+	local topbar_list = Elements.create_list(topbar, UDim.new(0, 5))
 
-	local btn_select = elements.create_pill(topbar_list, "Select")
-	local btn_save = elements.create_pill(topbar_list, "Save")
-	elements.on_click(btn_select, selectItem)
-	elements.on_click(btn_save, saveItem)
+	local btn_select = Elements.create_pill(topbar_list, "Select")
+	local btn_save = Elements.create_pill(topbar_list, "Save")
+	Elements.on_click(btn_select, selectItem)
+	Elements.on_click(btn_save, saveItem)
 	
-	elements.style_pop()
+	Elements.style_pop()
 end)

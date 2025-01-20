@@ -3,38 +3,37 @@ local testService = game:GetService("TestService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local serverScriptService = game:GetService("ServerScriptService")
 local server = serverScriptService.Script.Implementations
-local common = replicatedStorage.Common
+local common = replicatedStorage.OTF.Common
 
-local position = require(common.Data.Position)
-local plot = require(common.Plot)
-local asset = require(common.Asset.Asset)
-local dragModes = require(common.DragModes)
-local customer = require(common.Actor.Customer)
-local actor = require(common.Actor.Actor)
-require(serverScriptService.Script.Bootloader)()
+local Position = require(common.Data.Position)
+local Plot = require(common.Plot)
+local Asset = require(common.Asset.Asset)
+local DragModes = require(common.DragModes)
+local Actor = require(common.Actor.Actor)
+require(serverScriptService.OTF.Bootloader)()
 
 
-local p = plot.create_from_folder(workspace.Grid1)
-plot.gridlayer_attach(p, "center", "floor", 0)
-plot.gridlayer_attach(p, "edge", "wall_outer", 0)
+local p = Plot.create_from_folder(workspace.Grid1)
+Plot.gridlayer_attach(p, "center", "floor", 0)
+Plot.gridlayer_attach(p, "edge", "wall_outer", 0)
 
 local function convertFromWorldToObjectToToWorld(cur: Vector3)
-	local pos_object = position.world_to_object(cur)
-	local pos_world = position.object_to_world(pos_object)
+	local pos_object = Position.world_to_object(cur)
+	local pos_world = Position.object_to_world(pos_object)
 	testService:Check((pos_world - cur):Abs().Magnitude < 0.01,
 		`Expected world_to_object -> object_to_world to return identical values, got {cur} -> {pos_world}`
 	)
 end
 local function convertFromWorldToObjectToToWorldWithPlot(cur: Vector3)
-	local pos_object = position.world_to_object(cur, workspace.Grid1)
-	local pos_world = position.object_to_world(pos_object)
+	local pos_object = Position.world_to_object(cur, workspace.Grid1)
+	local pos_world = Position.object_to_world(pos_object)
 	testService:Check((pos_world - cur):Abs().Magnitude < 0.01,
 		`Expected world_to_object -> object_to_world to return identical values, got {cur} -> {pos_world}`
 	)
 end
 local function convertFromWorldToObjectToToWorldWithCF(cf: CFrame)
-	local pos_object = position.world_to_object_cf(cf)
-	local pos_world = position.object_to_world_cf(pos_object)
+	local pos_object = Position.world_to_object_cf(cf)
+	local pos_world = Position.object_to_world_cf(pos_object)
 	testService:Check((pos_world.Position - cf.Position):Abs().Magnitude < 0.01
 		and (pos_world.LookVector - cf.LookVector):Abs().Magnitude < 0.01
 		and (pos_world.RightVector - cf.RightVector):Abs().Magnitude < 0.01
@@ -55,7 +54,7 @@ convertFromWorldToObjectToToWorldWithCF(CFrame.new(1, 2, 3) * CFrame.Angles(0, m
 ]]
 
 local function fillWall(assetName, f, t)
-	local layer = asset.resolve_type(assetName)
+	local layer = Asset.resolve_type(assetName)
 	local from = f
 	local to = {
 		pos = t,
@@ -64,23 +63,23 @@ local function fillWall(assetName, f, t)
 	}
 	local succesCount = 0
 	local total = 0
-	for _, position in dragModes.get_positions("wall_outer", from, to, "square") do
+	for _, position in DragModes.get_positions("wall_outer", from, to, "square") do
 		total += 1
-		succesCount += plot.build_asset(position, layer, assetName) and 1 or 0
+		succesCount += Plot.build_asset(position, layer, assetName) and 1 or 0
 	end
 	print(succesCount, total)
 end
 
 local function canFloodFillRoom()
 	fillWall("Wall_Outer.Brick", Vector3.new(0, 0, 0), Vector3.new(3, 0, 3))
-	plot.build(p)
+	Plot.build(p)
 	print(p)
-	local a = actor.create({
+	local a = Actor.create({
 		pos = Vector3.zero,
 		rot = 0,
 		plot = p.folder
 	}, "Npc")
-	actor.walk_to(a, {
+	Actor.walk_to(a, {
 		pos = Vector3.new(2, 0, 2),
 		rot = 0,
 		plot = p.folder
