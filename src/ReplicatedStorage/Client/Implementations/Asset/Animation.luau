@@ -3,8 +3,8 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local animation = require(common.Asset.Animation)
-local asset = require(common.Asset.Asset)
+local Animation = require(common.Asset.Animation)
+local Asset = require(common.Asset.Asset)
 
 
 local function animator_get_or_create(model: Model)
@@ -26,8 +26,8 @@ local function animator_get_or_create(model: Model)
 end
 
 
-function animation.create_by_name(model, name)
-	local asset = asset.set_fetch(asset.animations, name)
+function Animation.create_by_name(model, name)
+	local asset = Asset.set_fetch(Asset.animations, name)
 	local animator = animator_get_or_create(model)
 	return animator:LoadAnimation(asset)
 end

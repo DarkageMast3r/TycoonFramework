@@ -3,14 +3,14 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local contextActionService = game:GetService("ContextActionService")
 
 local contracts = script.Parent.Parent.Contracts
-local actionManager = require(contracts.ActionManager)
+local ActionManager = require(contracts.ActionManager)
 
 
 local actions: {[string]: (boolean) -> ()} = {}
 local action_modes: {[string]: string} = {}
 
 
-function actionManager.register(name, mode, callback)
+function ActionManager.register(name, mode, callback)
 	actions[name] = callback
 	action_modes[name] = mode
 end
@@ -28,7 +28,7 @@ local function actionHandler(action: string, state: Enum.UserInputState, input: 
 end
 
 
-function actionManager.bind(name, ...)
+function ActionManager.bind(name, ...)
 	contextActionService:BindAction(name, actionHandler, false, ...)
 end
 

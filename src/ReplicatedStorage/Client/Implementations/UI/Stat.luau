@@ -6,21 +6,21 @@ local textService = game:GetService("TextService")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local elements = require(contracts.UI.Elements)
-local asset = require(common.Asset.Asset)
+local Elements = require(contracts.UI.Elements)
+local Asset = require(common.Asset.Asset)
 
 
 local stat_counters: {[string]: TextLabel} = {}
 
-function elements.create_stat(parent, name)
-	local container, icon, text = elements.create_element_sequence(
+function Elements.create_stat(parent, name)
+	local container, icon, text = Elements.create_element_sequence(
 		parent,
 		Color3.fromRGB(71, 159, 74),
-		asset.set_fetch(asset.images, `Icon.{name}`),
+		Asset.set_fetch(Asset.images, `Icon.{name}`),
 		"0"
 	)
-	elements.style_corner(container)
-	elements.style_line_height(container)
+	Elements.style_corner(container)
+	Elements.style_line_height(container)
 	container.BackgroundTransparency = 0
 	container.BackgroundColor3 = Color3.new(1,1,1)
 	stat_counters[name] = text :: TextLabel

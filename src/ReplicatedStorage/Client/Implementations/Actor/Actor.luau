@@ -4,8 +4,8 @@ local runService = game:GetService("RunService")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local actor = require(common.Actor.Actor)
-local asset = require(common.Asset.Asset)
+local Actor = require(common.Actor.Actor)
+local Asset = require(common.Asset.Asset)
 
 
 for _, stateModule in script.Parent.States:GetChildren() do
@@ -13,7 +13,7 @@ for _, stateModule in script.Parent.States:GetChildren() do
 		continue
 	end
 	local stateData = require(stateModule)
-	actor.states[stateModule.Name] = {
+	Actor.states[stateModule.Name] = {
 		init = stateData.init,
 		update = stateData.update
 	}
@@ -27,9 +27,9 @@ local function id_generate()
 end
 
 
-function actor.create(pos, meshName, idHint)
-	local mesh = asset.create_by_name(meshName)
-	local a: actor.actor = {
+function Actor.create(pos, meshName, idHint)
+	local mesh = Asset.create_by_name(meshName)
+	local a: Actor.actor = {
 		id = idHint or id_generate(),
 		state = "idle",
 		position = pos,
@@ -42,28 +42,28 @@ function actor.create(pos, meshName, idHint)
 		waypoint_reached = Instance.new("BindableEvent"),
 		target_reached = Instance.new("BindableEvent")
 	}
-	asset.move_to(mesh, a.position)
+	Asset.move_to(mesh, a.position)
 	mesh.Parent = workspace
 	return a
 end
 
 
-function actor.walk_to(a, pos, path)
-	a.target = pos
-	a.path = path or {pos}
-	actor.switch_to_state(a, "moving")
+function Actor.walk_to(actor, pos, path)
+	actor.target = pos
+	actor.path = path or {pos}
+	Actor.switch_to_state(actor, "moving")
 end
 
 
-replicatedStorage.Remotes.ActorSpawnEvent.OnClientEvent:Connect(actor.spawn)
+replicatedStorage.Remotes.ActorSpawnEvent.OnClientEvent:Connect(Actor.spawn)
 replicatedStorage.Remotes.ActorMoveEvent.OnClientEvent:Connect(function(id, pos, path)
-	local a = actor.get_by_id(id)
-	if a == nil then
+	local actor = Actor.get_by_id(id)
+	if actor == nil then
 		return
 	end
 	
-	a.position = path[1]
-	actor.walk_to(a, pos, path)
+	actor.position = path[1]
+	Actor.walk_to(actor, pos, path)
 end)
 
 

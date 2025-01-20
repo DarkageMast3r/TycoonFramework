@@ -1,6 +1,6 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
 
-local asset = require(replicatedStorage.Common.Asset.Asset)
+local Asset = require(replicatedStorage.Common.Asset.Asset)
 
 local bootloaded_total = 0
 local bootloaded_success = 0
@@ -28,9 +28,9 @@ return function()
 	bootload_folder(script.Parent.Implementations.Game)
 	print(`Succesfully loaded {bootloaded_success}/{bootloaded_total} modules`)
 
-	asset.set_append_from_folder(asset.assets, replicatedStorage.Assets.Models)
-	asset.set_append_from_folder(asset.animations, replicatedStorage.Assets.Animations)
-	asset.set_append(asset.images, require(replicatedStorage.Assets.Images))
-	asset.set_append(asset.translations, require(replicatedStorage.Assets.Translations))
-	asset.set_append(asset.assetInfo, require(replicatedStorage.Assets.AssetInfo))
+	Asset.set_append_from_folder(Asset.assets, replicatedStorage.Assets.Models)
+	Asset.set_append_from_folder(Asset.animations, replicatedStorage.Assets.Animations)
+	Asset.set_append(Asset.images, require(replicatedStorage.Assets.Images))
+	Asset.set_append(Asset.translations, require(replicatedStorage.Assets.Translations))
+	Asset.set_append(Asset.assetInfo, require(replicatedStorage.Assets.AssetInfo))
 end

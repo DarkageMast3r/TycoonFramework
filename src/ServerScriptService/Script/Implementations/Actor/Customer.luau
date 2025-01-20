@@ -5,16 +5,16 @@ local runService = game:GetService("RunService")
 
 local contracts = serverScriptService.Script.Contracts
 local common = replicatedStorage.Common
-local actor = require(common.Actor.Actor)
-local customer = require(common.Actor.Customer)
-local tr = require(common.Data.TeleoReactive)
-local position = require(common.Data.Position)
-local plot = require(common.Plot)
+local Actor = require(common.Actor.Actor)
+local Customer = require(common.Actor.Customer)
+local Tr = require(common.Data.TeleoReactive)
+local Position = require(common.Data.Position)
+local Plot = require(common.Plot)
 local Data = require(contracts.Data)
 
 
 local function is_in_bounds(p: Folder?, pos: Vector3): boolean
-	local p = plot.get_by_folder(p)
+	local p = Plot.get_by_folder(p)
 	if p == nil then
 		return false
 	end
@@ -22,7 +22,7 @@ local function is_in_bounds(p: Folder?, pos: Vector3): boolean
 end
 
 
-local programs: {tr.program<customer.customer>} = {
+local programs: {Tr.program<Customer.customer>} = {
 	{
 		main = {
 			function(c)
@@ -37,7 +37,7 @@ local programs: {tr.program<customer.customer>} = {
 		},
 		eat = {
 			function(c)
-				if position.distance(c.actionPosition, c.actor.position) < 0.01 then
+				if Position.distance(c.actionPosition, c.actor.position) < 0.01 then
 					local price = math.random(10, 20)
 					c.bill_to_pay += price
 					print(`Eaten for {price}`)
@@ -46,14 +46,14 @@ local programs: {tr.program<customer.customer>} = {
 				return nil
 			end,
 			function(c)
-				local p = plot.get_by_folder(c.actor.position.plot)
+				local p = Plot.get_by_folder(c.actor.position.plot)
 				if p == nil then
 					return nil
 				end
-				local found = plot.asset_seek(p, "asset", "Chair")
-				for _, chair in plot.asset_seek(p, "asset", "Chair") do
-					if position.distance(chair, c.actor.position) < 5 then
-						actor.walk_to(c.actor, chair)
+				local found = Plot.asset_seek(p, "asset", "Chair")
+				for _, chair in Plot.asset_seek(p, "asset", "Chair") do
+					if Position.distance(chair, c.actor.position) < 5 then
+						Actor.walk_to(c.actor, chair)
 						c.actionPosition = chair
 						return ""
 					end
@@ -63,8 +63,8 @@ local programs: {tr.program<customer.customer>} = {
 		},
 		pay = {
 			function(c)
-				if position.distance(c.actionPosition, c.actor.position) < 0.01 then
-					local p = plot.get_by_folder(c.actionPosition.plot)
+				if Position.distance(c.actionPosition, c.actor.position) < 0.01 then
+					local p = Plot.get_by_folder(c.actionPosition.plot)
 					if p == nil then
 						return nil
 					end
@@ -84,13 +84,13 @@ local programs: {tr.program<customer.customer>} = {
 				return nil
 			end,
 			function(c)
-				local p = plot.get_by_folder(c.actor.position.plot)
+				local p = Plot.get_by_folder(c.actor.position.plot)
 				if p == nil then
 					return nil
 				end
-				for _, checkout in plot.asset_seek(p, "asset", "Checkout") do
-					if position.distance(checkout, c.actor.position) < 5 then
-						actor.walk_to(c.actor, checkout)
+				for _, checkout in Plot.asset_seek(p, "asset", "Checkout") do
+					if Position.distance(checkout, c.actor.position) < 5 then
+						Actor.walk_to(c.actor, checkout)
 						c.actionPosition = checkout
 						return ""
 					end
@@ -106,7 +106,7 @@ local programs: {tr.program<customer.customer>} = {
 				return nil
 			end,
 			function(c)
-				local p = plot.get_by_folder(c.actor.position.plot) :: plot.plot
+				local p = Plot.get_by_folder(c.actor.position.plot) :: Plot.plot
 				local pos = {
 					pos = c.actor.position.pos + Vector3.new(
 						math.random(-1, 1),
@@ -120,7 +120,7 @@ local programs: {tr.program<customer.customer>} = {
 					return ""
 				end
 				c.steps_since_last_action += 1
-				actor.walk_to(c.actor, pos)
+				Actor.walk_to(c.actor, pos)
 				return ""
 			end
 		},
@@ -139,10 +139,10 @@ local programs: {tr.program<customer.customer>} = {
 		exit = {
 			function(c)
 				if (c.actor.position.pos == Vector3.zero) then
-					customer.despawn(c)
+					Customer.despawn(c)
 				else
 					c.steps_since_last_action = 0
-					actor.walk_to(c.actor, {
+					Actor.walk_to(c.actor, {
 						pos = Vector3.zero,
 						rot = 0,
 						plot = c.actor.position.plot
@@ -155,32 +155,32 @@ local programs: {tr.program<customer.customer>} = {
 }
 
 
-function customer.spawn(pos, meshName, id)
-	local actor = actor.spawn(pos, meshName, id)
-	local c: customer.customer
+function Customer.spawn(pos, meshName, id)
+	local actor = Actor.spawn(pos, meshName, id)
+	local c: Customer.customer
 	c = {
 		id = actor.id,
 		actor = actor,
 		inventory = {},
 		schedule = {"eat", "wander", "eat", "pay"},
 		steps_since_last_action = 0,
-		actionPosition = position.translate(pos, -1, -1, -1, 0),
-		program = tr.program_compile(programs[1], c),
+		actionPosition = Position.translate(pos, -1, -1, -1, 0),
+		program = Tr.program_compile(programs[1], c),
 		positions_to_check = {},
 		bill_to_pay = 0
 	}
 	c.program.object = c
-	table.insert(customer.allCustomers, c)
+	table.insert(Customer.allCustomers, c)
 	return c
 end
 
 
-function customer.despawn(c)
-	actor.despawn(c.actor)
+function Customer.despawn(c)
+	Actor.despawn(c.actor)
 end
 
 
-function customer.add_position_to_check(c, pos)
+function Customer.add_position_to_check(c, pos)
 	for _, pos2 in c.positions_to_check do
 		if pos2.pos == pos.pos then
 			return
@@ -190,8 +190,8 @@ function customer.add_position_to_check(c, pos)
 end
 
 
-function customer.get_by_id(id)
-	for _, c in customer.allCustomers do
+function Customer.get_by_id(id)
+	for _, c in Customer.allCustomers do
 		if c.id == id then
 			return c
 		end
@@ -200,8 +200,8 @@ function customer.get_by_id(id)
 end
 
 
-function customer.get_by_actor(actor)
-	for _, c in customer.allCustomers do
+function Customer.get_by_actor(actor)
+	for _, c in Customer.allCustomers do
 		if c.actor.id == actor.id then
 			return c
 		end
@@ -209,14 +209,14 @@ function customer.get_by_actor(actor)
 	return nil
 end
 
-function customer.tick(dt)
-	for _, c in customer.allCustomers do
-		tr.program_step(c.program)
+function Customer.tick(dt)
+	for _, c in Customer.allCustomers do
+		Tr.program_step(c.program)
 	end
 end
 
 
-function customer.replicate(c)
+function Customer.replicate(c)
 	
 end
 

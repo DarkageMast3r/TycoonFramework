@@ -3,18 +3,15 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local asset = require(common.Asset.Asset)
-local plot = require(common.Plot)
-local config = require(common.Config)
-local position = require(common.Data.Position)
+local Asset = require(common.Asset.Asset)
 
 
-
-function asset.set_fetch(set, key)
-	return set[asset.set_key_resolve(set, key)]
+function Asset.set_fetch(set, key)
+	return set[Asset.set_key_resolve(set, key)]
 end
 
-function asset.set_key_resolve(set, key)
+
+function Asset.set_key_resolve(set, key)
 	local originalKey = key
 	key = key:lower()
 	if set[key] then
@@ -31,13 +28,15 @@ function asset.set_key_resolve(set, key)
 	return key
 end
 
-function asset.set_append(set, items)
+
+function Asset.set_append(set, items)
 	for i, v in items do
 		set[i:lower()] = v
 	end
 end
 
-function asset.set_append_from_folder(set, folder)
+
+function Asset.set_append_from_folder(set, folder)
 	for _, instance in folder:GetChildren() do
 		set[instance.Name:lower()] = instance :: any
 	end

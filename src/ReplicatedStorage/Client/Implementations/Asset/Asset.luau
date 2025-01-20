@@ -3,13 +3,11 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local asset = require(common.Asset.Asset)
-local plot = require(common.Plot)
-local config = require(common.Config)
-local position = require(common.Data.Position)
+local Asset = require(common.Asset.Asset)
+local Position = require(common.Data.Position)
 
 
-function asset.set_uninteractable(model)
+function Asset.set_uninteractable(model)
 	for _, p in model:GetDescendants() do
 		if p:IsA("BasePart") then
 			p.CanCollide = false
@@ -20,11 +18,11 @@ function asset.set_uninteractable(model)
 end
 
 
-function asset.create_by_name(name)
+function Asset.create_by_name(name)
 	if name == "" then
 		return Instance.new("Model")
 	end
-	local asset = asset.set_fetch(asset.assets, name)
+	local asset = Asset.set_fetch(Asset.assets, name)
 	local created = asset:Clone()
 	created.Name = name
 	for _, part in created:GetDescendants() do
@@ -39,7 +37,7 @@ function asset.create_by_name(name)
 end
 
 
-function asset.without_modifiers(name)
+function Asset.without_modifiers(name)
 	local idx = name:find("%[")
 	if idx == nil then
 		return name
@@ -48,9 +46,9 @@ function asset.without_modifiers(name)
 end
 
 
-function asset.modifier_add(name, modifier)
-	local raw = asset.without_modifiers(name)
-	local modifiers = asset.modifier_get(modifier)
+function Asset.modifier_add(name, modifier)
+	local raw = Asset.without_modifiers(name)
+	local modifiers = Asset.modifier_get(modifier)
 	modifiers[modifier] = true
 	local modifier_list = {}
 	for modifier in modifiers do
@@ -60,9 +58,9 @@ function asset.modifier_add(name, modifier)
 end
 
 
-function asset.modifier_remove(name, modifier)
-	local raw = asset.without_modifiers(name)
-	local modifiers = asset.modifier_get(modifier)
+function Asset.modifier_remove(name, modifier)
+	local raw = Asset.without_modifiers(name)
+	local modifiers = Asset.modifier_get(modifier)
 	modifiers[modifier] = nil
 	local modifier_list = {}
 	for modifier in modifiers do
@@ -72,7 +70,7 @@ function asset.modifier_remove(name, modifier)
 end
 
 
-function asset.modifier_get(name)
+function Asset.modifier_get(name)
 	local idx = name:find("%[")
 	if idx == nil then
 		return {}
@@ -91,14 +89,14 @@ function asset.modifier_get(name)
 end
 
 
-function asset.resolve_type(name)
+function Asset.resolve_type(name)
 	local frag = name:split(".")
 	return frag[1]:lower()
 end
 
 
-function asset.move_to(model, pos)
-	model:PivotTo(position.object_to_world_cf(pos))
+function Asset.move_to(model, pos)
+	model:PivotTo(Position.object_to_world_cf(pos))
 end
 
 

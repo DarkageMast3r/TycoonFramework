@@ -1,10 +1,10 @@
 --!strict
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local common = replicatedStorage.Common
-local position = require(common.Data.Position)
+local Position = require(common.Data.Position)
 
 export type cursor = {
-	pos: position.position,
+	pos: Position.position,
 	type: string,
 	asset: string,
 	hit_instance: Instance?,

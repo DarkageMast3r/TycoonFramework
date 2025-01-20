@@ -3,17 +3,17 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 
 local common = replicatedStorage.Common
-local replication = require(common.Replication)
-local position = require(common.Data.Position)
+local Replication = require(common.Replication)
+local Position = require(common.Data.Position)
 
 local schemas: {
 	[RemoteEvent]: {
-		[(...any) -> ()]: {replication.argument_type}
+		[(...any) -> ()]: {Replication.argument_type}
 	}
 } = {}
 
 
-local function scheme_matches(scheme: {replication.argument_type}, ...)
+local function scheme_matches(scheme: {Replication.argument_type}, ...)
 	local passed_scheme = {...}
 	if #scheme ~= #passed_scheme then
 		return false
@@ -28,7 +28,7 @@ local function scheme_matches(scheme: {replication.argument_type}, ...)
 		elseif t == "string" then
 			matches = matches and typeof(value) == "string"
 		elseif t == "position" then
-			matches = matches and position.is_valid(value)
+			matches = matches and Position.is_valid(value)
 		elseif t == "Vector3" then
 			matches = matches and typeof(value) == "Vector3"
 		else
@@ -81,7 +81,7 @@ local function on_event(event, ...)
 end
 
 
-function replication.bind_event(event, callback, ...)
+function Replication.bind_event(event, callback, ...)
 	if schemas[event] == nil then
 		schemas[event] = {}
 		if runService:IsServer() then

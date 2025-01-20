@@ -11,10 +11,10 @@ export type program_compiled<t> = {
 }
 
 
-local teleoReactive = {}
+local TeleoReactive = {}
 
 
-function teleoReactive.program_compile<t>(program: program<t>, object: t): program_compiled<t>
+function TeleoReactive.program_compile<t>(program: program<t>, object: t): program_compiled<t>
 	if program.main == nil then
 		error("Could not compile program!")
 	end
@@ -25,7 +25,7 @@ function teleoReactive.program_compile<t>(program: program<t>, object: t): progr
 end
 
 
-function teleoReactive.program_step<t>(program: program_compiled<t>)
+function TeleoReactive.program_step<t>(program: program_compiled<t>)
 	local step = "main"
 	local stepData = program.program[step]
 	while typeof(stepData) ~= "function" do
@@ -47,4 +47,4 @@ function teleoReactive.program_step<t>(program: program_compiled<t>)
 end
 
 
-return teleoReactive
+return TeleoReactive

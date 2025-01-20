@@ -2,10 +2,8 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local common = replicatedStorage.Common
 
-local position = require(common.Data.Position)
-local plot = require(common.Plot)
-local config = require(common.Config)
-local nodegraph = require(common.Data.Nodegraph)
+local Position = require(common.Data.Position)
+local NodeGraph = require(common.Data.Nodegraph)
 
 
 local function dequeue<t>(haystack: {{value: t, priority: number}}): t?
@@ -35,7 +33,7 @@ local function try_insert<t>(haystack: {{value: t, priority: number}}, needle: t
 end
 
 
-function nodegraph.pathfind_dijkstra<t>(nodegraph, from: nodegraph.node<t>, to: nodegraph.node<t>): {t}
+function NodeGraph.pathfind_dijkstra<t>(nodegraph, from: NodeGraph.node<t>, to: NodeGraph.node<t>): {t}
 	local nodes = nodegraph.nodes
 	for _, node in nodes do
 		node.distance = math.huge
@@ -60,7 +58,7 @@ function nodegraph.pathfind_dijkstra<t>(nodegraph, from: nodegraph.node<t>, to: 
 		end
 	until open[1] == nil
 	local nodes = {}
-	local cur: nodegraph.node<t>? = from
+	local cur: NodeGraph.node<t>? = from
 	repeat
 		if cur ~= nil then
 			table.insert(nodes, cur.value)
@@ -72,7 +70,7 @@ function nodegraph.pathfind_dijkstra<t>(nodegraph, from: nodegraph.node<t>, to: 
 end
 
 
-function nodegraph.pathfind_astar<t>(nodegraph, from: nodegraph.node<t>, to: nodegraph.node<t>, heuristic: (t, t) -> number): {t}
+function NodeGraph.pathfind_astar<t>(nodegraph, from: NodeGraph.node<t>, to: NodeGraph.node<t>, heuristic: (t, t) -> number): {t}
 	local nodes = nodegraph.nodes
 	for _, node in nodes do
 		node.distance = math.huge
@@ -101,7 +99,7 @@ function nodegraph.pathfind_astar<t>(nodegraph, from: nodegraph.node<t>, to: nod
 		end
 	until open[1] == nil
 	local nodes = {}
-	local cur: nodegraph.node<t>? = from
+	local cur: NodeGraph.node<t>? = from
 	repeat
 		if cur ~= nil then
 			table.insert(nodes, cur.value)
@@ -113,14 +111,14 @@ function nodegraph.pathfind_astar<t>(nodegraph, from: nodegraph.node<t>, to: nod
 end
 
 
-function nodegraph.node_connect(a, b, heuristic)
+function NodeGraph.node_connect(a, b, heuristic)
 	local distance = heuristic(a.value, b.value)
 	a.edges[b] = distance
 	b.edges[a] = distance
 end
 
 
-function nodegraph.node_create(value)
+function NodeGraph.node_create(value)
 	return {
 		value = value,
 		edges = {},
@@ -130,14 +128,14 @@ function nodegraph.node_create(value)
 end
 
 
-function nodegraph.visualise(graph, p, buffer)
+function NodeGraph.visualise(graph, p, buffer)
 	for _, p in buffer do
 		p:Destroy()
 	end
 
 	for _, node in graph.nodes do
 		local pos = node.value
-		local start = position.object_to_world({pos = pos, rot = 0, plot = p.folder}) + Vector3.new(0, 2, 0)
+		local start = Position.object_to_world({pos = pos, rot = 0, plot = p.folder}) + Vector3.new(0, 2, 0)
 		local part = Instance.new("Part")
 		part.CanCollide = false
 		part.CanTouch = false
@@ -150,7 +148,7 @@ function nodegraph.visualise(graph, p, buffer)
 		table.insert(buffer, part)
 		for edge in node.edges do
 			local to = edge.value
-			local target = position.object_to_world({pos = to, rot = 0, plot = p.folder}) + Vector3.new(0, 2, 0)
+			local target = Position.object_to_world({pos = to, rot = 0, plot = p.folder}) + Vector3.new(0, 2, 0)
 
 			local node = Instance.new("Part")
 			node.CanCollide = false

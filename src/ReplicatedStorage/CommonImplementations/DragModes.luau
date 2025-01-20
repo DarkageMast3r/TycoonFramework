@@ -2,11 +2,11 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local common = replicatedStorage.Common
-local position = require(common.Data.Position)
-local dragModes = require(common.DragModes)
+local Position = require(common.Data.Position)
+local DragModes = require(common.DragModes)
 
 
-local function get_positions_floor_square(from: Vector3, to: position.position): {position.position}
+local function get_positions_floor_square(from: Vector3, to: Position.position): {Position.position}
 	local from_pos = from:Min(to.pos)
 	local to_pos = from:Max(to.pos)
 
@@ -24,7 +24,7 @@ local function get_positions_floor_square(from: Vector3, to: position.position):
 end
 
 
-local function get_positions_floor_line(from: Vector3, to: position.position): {position.position}
+local function get_positions_floor_line(from: Vector3, to: Position.position): {Position.position}
 	local from_pos = from:Min(to.pos)
 	local to_pos = from:Max(to.pos)
 
@@ -49,7 +49,7 @@ local function get_positions_floor_line(from: Vector3, to: position.position): {
 end
 
 
-local function get_positions_wall_line(from_raw: Vector3, to_raw: position.position): {position.position}
+local function get_positions_wall_line(from_raw: Vector3, to_raw: Position.position): {Position.position}
 	local from = from_raw:Min(to_raw.pos)
 	local to = from_raw:Max(to_raw.pos)
 
@@ -114,7 +114,7 @@ local function get_positions_wall_line(from_raw: Vector3, to_raw: position.posit
 end
 
 
-local function get_positions_wall_square(from_raw: Vector3, to_raw: position.position): {position.position}
+local function get_positions_wall_square(from_raw: Vector3, to_raw: Position.position): {Position.position}
 	local from = from_raw:Min(to_raw.pos)
 	local to = from_raw:Max(to_raw.pos)
 
@@ -151,7 +151,7 @@ local function get_positions_wall_square(from_raw: Vector3, to_raw: position.pos
 end
 
 
-local function get_positions_single(from_raw: Vector3, to_raw: position.position): {position.position}
+local function get_positions_single(from_raw: Vector3, to_raw: Position.position): {Position.position}
 	return {{pos = from_raw, rot = to_raw.rot, plot = to_raw.plot}}
 end
 
@@ -170,7 +170,7 @@ local dragmodes = {
 }
 
 
-function dragModes.get_positions(mode, from, to, dragmode)
+function DragModes.get_positions(mode, from, to, dragmode)
 	if not dragmodes[mode] then
 		return get_positions_single(from, to)
 	end

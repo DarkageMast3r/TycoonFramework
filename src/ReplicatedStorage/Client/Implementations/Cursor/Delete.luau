@@ -3,19 +3,19 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
 
-local cursor = require(contracts.Cursor)
-local asset = require(common.Asset.Asset)
+local Cursor = require(contracts.Cursor)
+local Asset = require(common.Asset.Asset)
 
-local highlight: Model = asset.create_by_name("")
+local highlight: Model = Asset.create_by_name("")
 
 local function highlight_select(name: string)
 	highlight:Destroy()
-	highlight = asset.create_by_name(name)
-	asset.set_uninteractable(highlight)
+	highlight = Asset.create_by_name(name)
+	Asset.set_uninteractable(highlight)
 	highlight.Parent = workspace
 end
 
-cursor.tool_register(
+Cursor.tool_register(
 	"Delete",
 	function()
 		highlight_select("Highlight.Delete")
@@ -27,7 +27,7 @@ cursor.tool_register(
 		
 	end,
 	function()
-		local cursor_hit = cursor.current.hit_instance
+		local cursor_hit = Cursor.current.hit_instance
 		if cursor_hit == nil then
 			return
 		end
@@ -39,15 +39,15 @@ cursor.tool_register(
 		end
 
 		replicatedStorage.Remotes.PlotDeleteEvent:FireServer(
-			cursor.current.pos.pos,
-			cursor.current.pos,
-			asset.resolve_type(cursor_hit.Name),
+			Cursor.current.pos.pos,
+			Cursor.current.pos,
+			Asset.resolve_type(cursor_hit.Name),
 			"single"
 		)
 	end,
 	function()
-		cursor.update_location(true)
-		asset.move_to(highlight, cursor.current.pos)
+		Cursor.update_location(true)
+		Asset.move_to(highlight, Cursor.current.pos)
 	end
 )
 

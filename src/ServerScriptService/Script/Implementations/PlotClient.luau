@@ -3,14 +3,14 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local contracts = script.Parent.Parent.Contracts
 local common = replicatedStorage.Common
-local plot = require(common.Plot)
-local asset = require(common.Asset.Asset)
-local position = require(common.Data.Position)
+local Plot = require(common.Plot)
+local Asset = require(common.Asset.Asset)
+local Position = require(common.Data.Position)
 
 local layers = {}
 
-local function try_build(layer: plot.gridlayer, destination: Instance, pos: position.position, idx: number)
-	local asset_name = asset.set_key_resolve(asset.assets, layer.assets[idx])
+local function try_build(layer: Plot.gridlayer, destination: Instance, pos: Position.position, idx: number)
+	local asset_name = Asset.set_key_resolve(Asset.assets, layer.assets[idx])
 	if layer.assets_built[idx] == asset_name then
 		return
 	end
@@ -22,15 +22,15 @@ local function try_build(layer: plot.gridlayer, destination: Instance, pos: posi
 		layer.assets_models[idx] = nil
 	end
 
-	local created = asset.create_by_name(layer.assets[idx])
+	local created = Asset.create_by_name(layer.assets[idx])
 
-	asset.move_to(created, pos)
+	Asset.move_to(created, pos)
 	layer.assets_models[idx] = created
 	created.Parent = destination
 end
 
 
-local function plot_merge(old: plot.plot, new: plot.plot)
+local function plot_merge(old: Plot.plot, new: Plot.plot)
 	for i, layer in new.layers do
 		layer.assets_built = old.layers[i].assets_built or {}
 		layer.assets_models = old.layers[i].assets_models or {}
@@ -44,70 +44,70 @@ end
 
 
 local function cell_update(
-	back: {[string]: plot.gridlayer},
-	front: {[string]: plot.gridlayer},
-	pos: position.position,
-	dirty: {position.position}
+	back: {[string]: Plot.gridlayer},
+	front: {[string]: Plot.gridlayer},
+	pos: Position.position,
+	dirty: {Position.position}
 )
 	for layerName, layer in back do
-		local assetName = plot.gridlayer_get_asset(layer, pos)
-		plot.gridlayer_set_asset(front[layerName], pos, assetName)
+		local assetName = Plot.gridlayer_get_asset(layer, pos)
+		Plot.gridlayer_set_asset(front[layerName], pos, assetName)
 	end
 
-	local pos_opposite = position.translate(pos, 1, 0, 0, 2)
-	local asset = plot.gridlayer_get_asset(back.wall_inner, pos)
-	local asset_opposite = plot.gridlayer_get_asset(back.wall_inner, pos_opposite)
+	local pos_opposite = Position.translate(pos, 1, 0, 0, 2)
+	local asset = Plot.gridlayer_get_asset(back.wall_inner, pos)
+	local asset_opposite = Plot.gridlayer_get_asset(back.wall_inner, pos_opposite)
 	if asset:find("Window") or asset_opposite:find("Window") then
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
+		local asset1 = Plot.gridlayer_get_asset(back.wall_outer, pos)
 		if not asset1:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".Window")
+			Plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".Window")
 			table.insert(dirty, pos)
 		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
+		local asset2 = Plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
 		if not asset2:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2 .. ".Window")
+			Plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2 .. ".Window")
 			table.insert(dirty, pos_opposite)
 		end
 	else
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
+		local asset1 = Plot.gridlayer_get_asset(back.wall_outer, pos)
 		if asset1:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1:split(".Window")[1])
+			Plot.gridlayer_set_asset(front.wall_outer, pos, asset1:split(".Window")[1])
 			table.insert(dirty, pos)
 		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
+		local asset2 = Plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
 		if asset2:find("Window") then
-			plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2:split(".Window")[1])
+			Plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2:split(".Window")[1])
 			table.insert(dirty, pos_opposite)
 		end
 	end
 
 	if asset:find("DoorSingle") or asset_opposite:find("DoorSingle") then
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
+		local asset1 = Plot.gridlayer_get_asset(back.wall_outer, pos)
 		if not asset1:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".DoorSingle")
+			Plot.gridlayer_set_asset(front.wall_outer, pos, asset1 .. ".DoorSingle")
 			table.insert(dirty, pos)
 		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, position.translate(pos, 1, 0, 0, 2))
+		local asset2 = Plot.gridlayer_get_asset(back.wall_outer, Position.translate(pos, 1, 0, 0, 2))
 		if not asset2:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, position.translate(pos, 1, 0, 0, 2), asset2 .. ".DoorSingle")
+			Plot.gridlayer_set_asset(front.wall_outer, Position.translate(pos, 1, 0, 0, 2), asset2 .. ".DoorSingle")
 			table.insert(dirty, pos_opposite)
 		end
 	else
-		local asset1 = plot.gridlayer_get_asset(back.wall_outer, pos)
+		local asset1 = Plot.gridlayer_get_asset(back.wall_outer, pos)
 		if asset1:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, pos, asset1:split(".DoorSingle")[1])
+			Plot.gridlayer_set_asset(front.wall_outer, pos, asset1:split(".DoorSingle")[1])
 			table.insert(dirty, pos)
 		end
-		local asset2 = plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
+		local asset2 = Plot.gridlayer_get_asset(back.wall_outer, pos_opposite)
 		if asset2:find("DoorSingle") then
-			plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2:split(".DoorSingle")[1])
+			Plot.gridlayer_set_asset(front.wall_outer, pos_opposite, asset2:split(".DoorSingle")[1])
 			table.insert(dirty, pos_opposite)
 		end
 	end
 end
 
 
-function plot.update_execute_all(p)
+function Plot.update_execute_all(p)
 	local dirty = {}
 	for _, update in p.updates do
 		local height = update.pos.Y
@@ -126,7 +126,7 @@ function plot.update_execute_all(p)
 		cell_update(back, front, update, dirty)
 	end
 	for _, pos in dirty do
-		plot.update_push(pos)
+		Plot.update_push(pos)
 	end
 end
 
@@ -142,7 +142,7 @@ local function push_update_all(p)
 		for x = 1, p.size.X do
 			for z = 1, p.size.Y do
 				for rot = 0, 3 do
-					plot.update_push({
+					Plot.update_push({
 						pos = Vector3.new(x-1, layer.height, z-1),
 						rot = rot,
 						plot = p.folder
@@ -154,23 +154,23 @@ local function push_update_all(p)
 end
 
 
-function plot.build(p)
-	if plot.allPlots[p.folder] == nil then
-		plot.allPlots[p.folder] = p
+function Plot.build(p)
+	if Plot.allPlots[p.folder] == nil then
+		Plot.allPlots[p.folder] = p
 		push_update_all(p)
 	end
-	plot_merge(plot.allPlots[p.folder], p)
+	plot_merge(Plot.allPlots[p.folder], p)
 	
 	local models = p.folder:FindFirstChild("Models")
 	if models == nil then
 		return
 	end
-	plot.update_execute_all(p)
+	Plot.update_execute_all(p)
 	
 	for _, pos in p.updates do
 		for _, layer in p.layers_computed do
 			if layer.height == pos.pos.Y then
-				plot.layers[layer.type].build_cell(p, layer, pos, models)
+				Plot.layers[layer.type].build_cell(p, layer, pos, models)
 			end
 		end
 	end
@@ -178,7 +178,7 @@ function plot.build(p)
 end
 
 
-plot.layers.center = {
+Plot.layers.center = {
 	get_index = function(p, x, z, rotation)
 		return x + z * p.size.X + 1
 	end,
@@ -196,7 +196,7 @@ plot.layers.center = {
 	build = function(p, gridlayer, destination)
 		for x = 0, p.size.X - 1 do
 			for z = 0, p.size.Y - 1 do
-				local idx = plot.layers.center.get_index(p, x, z, 0)
+				local idx = Plot.layers.center.get_index(p, x, z, 0)
 				try_build(gridlayer, destination, {
 					pos = Vector3.new(x, gridlayer.height, z),
 					rot = 0,
@@ -206,7 +206,7 @@ plot.layers.center = {
 		end
 	end,
 	build_cell = function(p, gridlayer, pos, destination)
-		local idx = plot.layers.center.get_index(p, pos.pos.X, pos.pos.Z, 0)
+		local idx = Plot.layers.center.get_index(p, pos.pos.X, pos.pos.Z, 0)
 		try_build(gridlayer, destination, pos, idx)
 	end,
 	resize = function(src, from, to)
@@ -222,7 +222,7 @@ plot.layers.center = {
 	end
 }
 
-plot.layers.edge = {
+Plot.layers.edge = {
 	get_index = function(p, x, z, rotation)
 		return (x + z * p.size.X) * 4 + rotation + 1
 	end,
@@ -243,7 +243,7 @@ plot.layers.edge = {
 		for x = 0, p.size.X - 1 do
 			for z = 0, p.size.Y - 1 do
 				for rot = 0, 3 do
-					local idx = plot.layers.edge.get_index(p, x, z, rot)
+					local idx = Plot.layers.edge.get_index(p, x, z, rot)
 					try_build(gridlayer, destination, {
 						pos = Vector3.new(x, gridlayer.height, z),
 						rot = rot,
@@ -255,7 +255,7 @@ plot.layers.edge = {
 	end,
 	build_cell = function(p, gridlayer, pos, destination)
 		for rot = 0, 3 do
-			local idx = plot.layers.edge.get_index(p, pos.pos.X, pos.pos.Z, rot)
+			local idx = Plot.layers.edge.get_index(p, pos.pos.X, pos.pos.Z, rot)
 			try_build(gridlayer, destination, {
 				pos = pos.pos,
 				rot = rot,

@@ -6,22 +6,22 @@ local players = game:GetService("Players")
 
 local contracts = serverScriptService.Script.Contracts
 local common = replicatedStorage.Common
-local position = require(common.Data.Position)
-local plot = require(common.Plot)
-local asset = require(common.Asset.Asset)
-local data = require(contracts.Data)
-local nodegraph = require(common.Data.Nodegraph)
+local Position = require(common.Data.Position)
+local Plot = require(common.Plot)
+local Asset = require(common.Asset.Asset)
+local Data = require(contracts.Data)
+local NodeGraph = require(common.Data.Nodegraph)
 local Tycoon = require(common.Game.Tycoon)
 
 
-function plot.create_from_folder(folder)
-	local valid, err = plot.is_valid_folder(folder)
+function Plot.create_from_folder(folder)
+	local valid, err = Plot.is_valid_folder(folder)
 	if not valid then
 		error(err)
 	end
 
 	local grid = folder:WaitForChild("Grid") :: BasePart
-	local p: plot.plot = {
+	local p: Plot.plot = {
 		dirty = false,
 		layers = {},
 		folder = folder,
@@ -30,12 +30,12 @@ function plot.create_from_folder(folder)
 		updates = {},
 		layers_computed = {}
 	}
-	plot.allPlots[folder] = p
+	Plot.allPlots[folder] = p
 	return p
 end
 
 
-function plot.is_valid_folder(folder)
+function Plot.is_valid_folder(folder)
 	local grid = folder:FindFirstChild("Grid")
 	if not grid then
 		return false, string.format("Folder %s is missing part Grid", folder:GetFullName())
@@ -50,17 +50,17 @@ function plot.is_valid_folder(folder)
 end
 
 
-function plot.claim(p, player)
+function Plot.claim(p, player)
 	if p.owner ~= nil then
 		return false
 	end
-	plot.load(p, player)
+	Plot.load(p, player)
 	p.owner = player
 	return true
 end
 
 
-function plot.unclaim(plot, player)
+function Plot.unclaim(plot, player)
 	if plot.owner ~= player then
 		return false
 	end
@@ -70,7 +70,7 @@ function plot.unclaim(plot, player)
 end
 
 
-function plot.gridlayer_attach(plot, type, name, height)
+function Plot.gridlayer_attach(plot, type, name, height)
 	local asset_count = 0
 	if type == "edge" then
 		asset_count = plot.size.X * plot.size.Y * 4
@@ -102,12 +102,12 @@ function plot.gridlayer_attach(plot, type, name, height)
 end
 
 
-function plot.build_asset(pos, name, assetName)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.build_asset(pos, name, assetName)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return false
 	end
-	local gridlayer = plot.gridlayer_get(p, name, pos.pos.Y)
+	local gridlayer = Plot.gridlayer_get(p, name, pos.pos.Y)
 	if gridlayer == nil then
 		return false
 	end
@@ -115,26 +115,26 @@ function plot.build_asset(pos, name, assetName)
 	if pos.pos.X < 0 or pos.pos.Z < 0 or pos.pos.X >= p.size.X or pos.pos.Z >= p.size.Y then
 		return false
 	end
-	local oldasset = plot.gridlayer_get_asset(gridlayer, pos)
+	local oldasset = Plot.gridlayer_get_asset(gridlayer, pos)
 	if oldasset == assetName then
 		return false
 	end
 	if oldasset ~= "" then
-		plot.collisionmesh_remove(pos, asset.collisionmesh_get(oldasset))
+		Plot.collisionmesh_remove(pos, Asset.collisionmesh_get(oldasset))
 	end
-	plot.gridlayer_set_asset(gridlayer, pos, assetName)
+	Plot.gridlayer_set_asset(gridlayer, pos, assetName)
 	p.dirty = true
 
 	if assetName ~= "" then
-		plot.collisionmesh_place(pos, asset.collisionmesh_get(assetName))
+		Plot.collisionmesh_place(pos, Asset.collisionmesh_get(assetName))
 	end
-	plot.update_push(pos)
+	Plot.update_push(pos)
 
 	return true
 end
 
 
-function plot.replicate(plot)
+function Plot.replicate(plot)
 	if not plot.dirty then
 		return
 	end
@@ -145,7 +145,7 @@ end
 
 
 replicatedStorage.Remotes.PlotReplicateEvent.OnServerEvent:Connect(function(player: Player)
-	for _, p in plot.allPlots do
+	for _, p in Plot.allPlots do
 		if p.owner == player then
 			replicatedStorage.Remotes.PlotReplicateEvent:FireClient(player, p)
 		end
@@ -154,15 +154,15 @@ end)
 
 
 
-function plot.save(p)
+function Plot.save(p)
 	local owner = p.owner
 	if owner == nil then
 		return
 	end
-	local serialized = data.load_plot(owner)
+	local serialized = Data.load_plot(owner)
 	table.clear(serialized.layers)
 	for _, layer in p.layers do
-		local layer_serialized: data.layer_serialized = {
+		local layer_serialized: Data.layer_serialized = {
 			height = layer.height,
 			name = layer.name,
 			type = layer.type,
@@ -177,8 +177,8 @@ function plot.save(p)
 end
 
 
-local function layer_resize(l: data.layer_serialized, to: Vector2int16): {string}
-	local layer = plot.layers[l.type]
+local function layer_resize(l: Data.layer_serialized, to: Vector2int16): {string}
+	local layer = Plot.layers[l.type]
 	if layer == nil then
 		return table.create(to.X * to.Y, "")
 	end
@@ -186,11 +186,11 @@ local function layer_resize(l: data.layer_serialized, to: Vector2int16): {string
 end
 
 
-function plot.load(p, player)
-	local serialized = data.load_plot(player)
+function Plot.load(p, player)
+	local serialized = Data.load_plot(player)
 	local last = tick()
 	for _, layer in serialized.layers do
-		local gridlayer = plot.gridlayer_get(p, layer.name, layer.height)
+		local gridlayer = Plot.gridlayer_get(p, layer.name, layer.height)
 		if gridlayer == nil then
 			continue
 		end
@@ -199,10 +199,10 @@ function plot.load(p, player)
 			if assetName == "" then
 				continue
 			end
-			local pos = plot.layers[gridlayer.type].get_position(p, i)
-			pos = position.translate(pos, 0, 0, layer.height, 0)
-			local mesh = asset.collisionmesh_get(assetName)
-			plot.collisionmesh_place(pos, mesh)
+			local pos = Plot.layers[gridlayer.type].get_position(p, i)
+			pos = Position.translate(pos, 0, 0, layer.height, 0)
+			local mesh = Asset.collisionmesh_get(assetName)
+			Plot.collisionmesh_place(pos, mesh)
 
 			Tycoon.on_build_fire(p, pos, assetName, layer.name)
 			local cur = tick()
@@ -216,7 +216,7 @@ function plot.load(p, player)
 end
 
 
-plot.layers.center = {
+Plot.layers.center = {
 	get_index = function(p, x, z, rotation)
 		return x + z * p.size.X + 1
 	end,
@@ -246,7 +246,7 @@ plot.layers.center = {
 	end
 }
 
-plot.layers.edge = {
+Plot.layers.edge = {
 	get_index = function(p, x, z, rotation)
 		return (x + z * p.size.X) * 4 + rotation + 1
 	end,
@@ -281,7 +281,7 @@ plot.layers.edge = {
 }
 
 
-local function is_in_bounds(p: plot.plot, pos: Vector3): boolean
+local function is_in_bounds(p: Plot.plot, pos: Vector3): boolean
 	return pos.X >= 0 and pos.Y >= 0 and pos.Z >= 0 and pos.X < p.size.X and pos.Z < p.size.Y
 end
 
@@ -291,7 +291,7 @@ local function heuristic_distance(a: Vector3, b: Vector3)
 end
 
 
-local function getDirectionInfo(p: plot.plot, from: Vector3, dir: Vector3)
+local function getDirectionInfo(p: Plot.plot, from: Vector3, dir: Vector3)
 	local rot = 0
 	if dir == Vector3.xAxis then
 		rot = 2
@@ -303,12 +303,12 @@ local function getDirectionInfo(p: plot.plot, from: Vector3, dir: Vector3)
 		rot = 3
 	end
 
-	local wall_current = plot.get_asset({
+	local wall_current = Plot.get_asset({
 		pos = from,
 		rot = rot,
 		plot = p.folder
 	}, "wall_outer")
-	local wall_adjacent = plot.get_asset({
+	local wall_adjacent = Plot.get_asset({
 		pos = from + dir,
 		rot = (rot + 2) % 4,
 		plot = p.folder
@@ -316,12 +316,12 @@ local function getDirectionInfo(p: plot.plot, from: Vector3, dir: Vector3)
 
 	local is_wall = wall_current ~= "" or wall_adjacent ~= ""
 
-	local door_current = plot.get_asset({
+	local door_current = Plot.get_asset({
 		pos = from,
 		rot = rot,
 		plot = p.folder
 	}, "wall_inner")
-	local door_adjacent = plot.get_asset({
+	local door_adjacent = Plot.get_asset({
 		pos = from + dir,
 		rot = (rot + 2) % 4,
 		plot = p.folder
@@ -337,7 +337,7 @@ end
 
 local nodegraphs_by_folder = {}
 
-local function nodegraph_construct(p: plot.plot): nodegraph.nodegraph<Vector3>
+local function nodegraph_construct(p: Plot.plot): NodeGraph.nodegraph<Vector3>
 	local nodes = {}
 	local layer_indices = {}
 	
@@ -353,7 +353,7 @@ local function nodegraph_construct(p: plot.plot): nodegraph.nodegraph<Vector3>
 		layer_indices[layer.height] = indices
 		for x = 0, p.size.X - 1 do
 			for z = 0, p.size.Y - 1 do
-				local idx = plot.layers.center.get_index(p, x, z, 0)
+				local idx = Plot.layers.center.get_index(p, x, z, 0)
 				local node = {
 					value = Vector3.new(x, layer.height, z),
 					edges = {},
@@ -372,29 +372,29 @@ local function nodegraph_construct(p: plot.plot): nodegraph.nodegraph<Vector3>
 				local pos = Vector3.new(x, y, z)
 				local info_x = getDirectionInfo(p, pos, -Vector3.xAxis)
 				local info_z = getDirectionInfo(p, pos, -Vector3.zAxis)
-				local cur = layer[plot.layers.center.get_index(p, x, z, 0)]
+				local cur = layer[Plot.layers.center.get_index(p, x, z, 0)]
 				if not info_x.is_wall or info_x.is_walkable then
-					nodegraph.node_connect(cur, layer[plot.layers.center.get_index(p, x-1, z, 0)], heuristic_distance)
+					NodeGraph.node_connect(cur, layer[Plot.layers.center.get_index(p, x-1, z, 0)], heuristic_distance)
 				end
 				if not info_z.is_wall or info_z.is_walkable then
-					nodegraph.node_connect(cur, layer[plot.layers.center.get_index(p, x, z-1, 0)], heuristic_distance)
+					NodeGraph.node_connect(cur, layer[Plot.layers.center.get_index(p, x, z-1, 0)], heuristic_distance)
 				end
 			end
 		end
 		for x = 1, p.size.X - 1 do
-			local cur = layer[plot.layers.center.get_index(p, x, 0, 0)]
+			local cur = layer[Plot.layers.center.get_index(p, x, 0, 0)]
 			local pos = Vector3.new(x, y, 1)
 			local info_x = getDirectionInfo(p, pos, -Vector3.xAxis)
 			if not info_x.is_wall or info_x.is_walkable then
-				nodegraph.node_connect(cur, layer[plot.layers.center.get_index(p, x-1, 0, 0)], heuristic_distance)
+				NodeGraph.node_connect(cur, layer[Plot.layers.center.get_index(p, x-1, 0, 0)], heuristic_distance)
 			end
 		end
 		for z = 1, p.size.Y - 1 do
-			local cur = layer[plot.layers.center.get_index(p, 0, z, 0)]
+			local cur = layer[Plot.layers.center.get_index(p, 0, z, 0)]
 			local pos = Vector3.new(1, y, z)
 			local info_z = getDirectionInfo(p, pos, -Vector3.zAxis)
 			if not info_z.is_wall or info_z.is_walkable then
-				nodegraph.node_connect(cur, layer[plot.layers.center.get_index(p, 0, z-1, 0)], heuristic_distance)
+				NodeGraph.node_connect(cur, layer[Plot.layers.center.get_index(p, 0, z-1, 0)], heuristic_distance)
 			end
 		end
 	end
@@ -410,7 +410,7 @@ type roomInfo = {
 	doors: {Vector3},
 	cells: {Vector3}
 }
-local function getRoomInfo(p: plot.plot, pos: Vector3): roomInfo
+local function getRoomInfo(p: Plot.plot, pos: Vector3): roomInfo
 	local closed = {}
 	local open = {pos}
 	local cells = {pos}
@@ -453,7 +453,7 @@ local function getRoomInfo(p: plot.plot, pos: Vector3): roomInfo
 end
 
 
-local function floodFillRoom(p: plot.plot, pos: Vector3, indices: {nodegraph.node<Vector3>}): {nodegraph.node<Vector3>}
+local function floodFillRoom(p: Plot.plot, pos: Vector3, indices: {NodeGraph.node<Vector3>}): {NodeGraph.node<Vector3>}
 	local closed = {}
 	local open = {pos}
 	local node_center = {
@@ -483,12 +483,12 @@ local function floodFillRoom(p: plot.plot, pos: Vector3, indices: {nodegraph.nod
 			local info = getDirectionInfo(p, cur, dir)
 			if info.is_wall then
 				if info.is_walkable then
-					local node_new = nodegraph.node_create(cur + dir * 0.5)
-					nodegraph.node_connect(node_new, node_center, heuristic_distance)
+					local node_new = NodeGraph.node_create(cur + dir * 0.5)
+					NodeGraph.node_connect(node_new, node_center, heuristic_distance)
 				end
 			else
 				local pos = cur + dir
-				local idx = plot.layers.center.get_index(p, pos.X, pos.Z, info.rot)
+				local idx = Plot.layers.center.get_index(p, pos.X, pos.Z, info.rot)
 				indices[idx] = node_center
 				table.insert(open, cur + dir)
 			end
@@ -499,26 +499,26 @@ local function floodFillRoom(p: plot.plot, pos: Vector3, indices: {nodegraph.nod
 end
 
 
-function plot.pathfind_update_map(p)
-	local nodes: {nodegraph.node<Vector3>} = {}
-	local layer_indices: {{nodegraph.node<Vector3>}} = {}
+function Plot.pathfind_update_map(p)
+	local nodes: {NodeGraph.node<Vector3>} = {}
+	local layer_indices: {{NodeGraph.node<Vector3>}} = {}
 	nodegraphs_by_folder[p.folder] = {
 		nodes = nodes,
 		layer_indices = layer_indices
 	}
 
-	local doorNodes: {[string]: nodegraph.node<Vector3>} = {}
+	local doorNodes: {[string]: NodeGraph.node<Vector3>} = {}
 
 	for _, layer in p.layers do
 		if layer_indices[layer.height] ~= nil then
 			continue
 		end
-		local indices: {nodegraph.node<Vector3>} = {}
+		local indices: {NodeGraph.node<Vector3>} = {}
 		layer_indices[layer.height] = indices
 		for x = 0, p.size.X - 1 do
 			for z = 0, p.size.Y - 1 do
 				local pos = Vector3.new(x, layer.height, z)
-				local idx = plot.layers.center.get_index(p, x, z, 0)
+				local idx = Plot.layers.center.get_index(p, x, z, 0)
 				if indices[idx] ~= nil then
 					continue
 				end
@@ -529,24 +529,24 @@ function plot.pathfind_update_map(p)
 				end]]
 				
 				local roomInfo = getRoomInfo(p, pos)
-				local node_center = nodegraph.node_create(pos)
+				local node_center = NodeGraph.node_create(pos)
 				table.insert(nodes, node_center)
 				local doors = {}
 				for _, cell in roomInfo.cells do
-					local idx = plot.layers.center.get_index(p, cell.X, cell.Z, 0)
+					local idx = Plot.layers.center.get_index(p, cell.X, cell.Z, 0)
 					indices[idx] = node_center
 				end
 				for i, door in roomInfo.doors do
 					local key = `{door:Floor()}-{door:Ceil()}`
 					if doorNodes[key] == nil then
-						doorNodes[key] = nodegraph.node_create(door)
+						doorNodes[key] = NodeGraph.node_create(door)
 					end
 					
 					doors[i] = doorNodes[key]
-					nodegraph.node_connect(doors[i], node_center, heuristic_distance)
+					NodeGraph.node_connect(doors[i], node_center, heuristic_distance)
 					table.insert(nodes, doors[i])
 					for i2 = 1, i-1 do
-						nodegraph.node_connect(doors[i], doors[i2], heuristic_distance)
+						NodeGraph.node_connect(doors[i], doors[i2], heuristic_distance)
 					end
 				end
 			end
@@ -558,8 +558,8 @@ end
 local visualNodes: {Instance} = {}
 
 
-function plot.pathfind_to(from, to)
-	local p = plot.get_by_folder(from.plot)
+function Plot.pathfind_to(from, to)
+	local p = Plot.get_by_folder(from.plot)
 	if p == nil then
 		return {}
 	end
@@ -567,14 +567,14 @@ function plot.pathfind_to(from, to)
 		return {from}
 	end
 	
-	plot.pathfind_update_map(p)
+	Plot.pathfind_update_map(p)
 	local graph = nodegraph_construct(p)
 	local layer_from = graph.layer_indices[from.pos.Y]
 	local layer_to = graph.layer_indices[to.pos.Y]
-	local idx_from = plot.layers.center.get_index(p, from.pos.X, from.pos.Z, 0)
-	local idx_to = plot.layers.center.get_index(p, to.pos.X, to.pos.Z, 0)
+	local idx_from = Plot.layers.center.get_index(p, from.pos.X, from.pos.Z, 0)
+	local idx_to = Plot.layers.center.get_index(p, to.pos.X, to.pos.Z, 0)
 
-	local nodes = nodegraph.pathfind_astar(
+	local nodes = NodeGraph.pathfind_astar(
 		graph,
 		layer_from[idx_from],
 		layer_to[idx_to],

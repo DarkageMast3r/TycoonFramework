@@ -2,7 +2,7 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local common = replicatedStorage.Common
 
-local plot = require(common.Plot)
+local Plot = require(common.Plot)
 
 export type node<t> = {
 	value: t,
@@ -23,5 +23,5 @@ return {} :: {
 	pathfind_dijkstra: <t>(nodegraph<t>, from: node<t>, to: node<t>) -> {t},
 	node_connect: <t>(a: node<t>, b: node<t>, heuristic: (t, t) -> number) -> (),
 	node_create: <t>(value: t) -> node<t>,
-	visualise: (nodegraph<Vector3>, p: plot.plot, buffer: {Instance}) -> ()
+	visualise: (nodegraph<Vector3>, p: Plot.plot, buffer: {Instance}) -> ()
 }

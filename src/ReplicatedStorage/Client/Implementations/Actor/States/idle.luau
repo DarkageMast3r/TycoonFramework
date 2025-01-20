@@ -1,13 +1,11 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local common = replicatedStorage.Common
-local position = require(common.Data.Position)
-local actor = require(common.Actor.Actor)
-local plot = require(common.Plot)
+local Actor = require(common.Actor.Actor)
 
 local state = {}
 
-function state.init(a)
-	actor.animation_play(a, "idle", 0.2)
+function state.init(actor)
+	Actor.animation_play(actor, "idle", 0.2)
 end
 
 function state.update(a, dt)

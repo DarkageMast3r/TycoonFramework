@@ -4,19 +4,17 @@ local runService = game:GetService("RunService")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local actor = require(common.Actor.Actor)
-local asset = require(common.Asset.Asset)
-local animation = require(common.Asset.Animation)
-local plot = require(common.Plot)
+local Actor = require(common.Actor.Actor)
+local Animation = require(common.Asset.Animation)
 
-actor.allActors = {}
+Actor.allActors = {}
 local actors_by_plot: {
-	[Folder]: {actor.actor}
+	[Folder]: {Actor.actor}
 } = {}
 
-function actor.spawn(pos, meshName, idHint)
-	local a = actor.create(pos, meshName, idHint)
-	table.insert(actor.allActors, a)
+function Actor.spawn(pos, meshName, idHint)
+	local a = Actor.create(pos, meshName, idHint)
+	table.insert(Actor.allActors, a)
 	local plot = pos.plot
 	if plot ~= nil then
 		if actors_by_plot[plot] == nil then
@@ -26,23 +24,23 @@ function actor.spawn(pos, meshName, idHint)
 	end
 	
 	if runService:IsServer() then
-		actor.replicate(a)
+		Actor.replicate(a)
 	end
 	
 	return a
 end
 
 
-function actor.despawn(a)
+function Actor.despawn(a)
 	local mesh = a.mesh
 	if mesh ~= nil then
 		mesh:Destroy()
 	end
 	a.waypoint_reached:Destroy()
 	a.target_reached:Destroy()
-	local idx = table.find(actor.allActors, a)
+	local idx = table.find(Actor.allActors, a)
 	if idx ~= nil then
-		table.remove(actor.allActors, idx)
+		table.remove(Actor.allActors, idx)
 	end
 	if runService:IsServer() then
 		replicatedStorage.Remotes.ActorDespawnEvent:FireAllClients(a.id)
@@ -50,28 +48,28 @@ function actor.despawn(a)
 end
 if runService:IsClient() then
 	replicatedStorage.Remotes.ActorDespawnEvent.OnClientEvent:Connect(function(id)
-		local a = actor.get_by_id(id)
+		local a = Actor.get_by_id(id)
 		if a == nil then
 			return
 		end
-		actor.despawn(a)
+		Actor.despawn(a)
 	end)
 end
 
 
-function actor.animation_load(a, type, name)
+function Actor.animation_load(a, type, name)
 	if a.mesh == nil then
 		return
 	end
 	
-	local anim = animation.create_by_name(a.mesh, name)
+	local anim = Animation.create_by_name(a.mesh, name)
 	if anim ~= nil then
 		a.animations[type] = anim
 	end
 end
 
 
-function actor.animation_play(a, type, fadeTime)
+function Actor.animation_play(a, type, fadeTime)
 	for t, anim in a.animations do
 		anim:Stop(fadeTime)
 	end
@@ -85,7 +83,7 @@ function actor.animation_play(a, type, fadeTime)
 end
 
 
-function actor.get_in_plot(pos)
+function Actor.get_in_plot(pos)
 	local plot = pos.plot
 	if plot == nil or actors_by_plot[plot] == nil then
 		return {}
@@ -94,11 +92,11 @@ function actor.get_in_plot(pos)
 end
 
 
-function actor.get_in_box(pos, size)
+function Actor.get_in_box(pos, size)
 	size -= Vector3.one
 
 	local found = {}
-	for _, a in actor.get_in_plot(pos) do
+	for _, a in Actor.get_in_plot(pos) do
 		local rel = a.position.pos - pos.pos
 		if math.abs(rel.X) <= size.X / 2
 			and math.abs(rel.Y) <= size.Y / 2
@@ -111,9 +109,9 @@ function actor.get_in_box(pos, size)
 end
 
 
-function actor.get_in_radius(pos, radius)
+function Actor.get_in_radius(pos, radius)
 	local found = {}
-	for _, a in actor.get_in_plot(pos) do
+	for _, a in Actor.get_in_plot(pos) do
 		local rel = a.position.pos - pos.pos
 		if rel.Magnitude <= radius then
 			table.insert(found, a)
@@ -123,8 +121,8 @@ function actor.get_in_radius(pos, radius)
 end
 
 
-function actor.get_by_id(id)
-	for _, a in actor.allActors do
+function Actor.get_by_id(id)
+	for _, a in Actor.allActors do
 		if a.id == id then
 			return a
 		end
@@ -133,15 +131,15 @@ function actor.get_by_id(id)
 end
 
 
-function actor.switch_to_state(a: actor.actor, state: string)
+function Actor.switch_to_state(a: Actor.actor, state: string)
 	a.state = state
-	actor.states[state].init(a)
+	Actor.states[state].init(a)
 end
 
 
-function actor.tick(dt: number)
-	for _, a in actor.allActors do
-		actor.states[a.state].update(a, dt)
+function Actor.tick(dt: number)
+	for _, a in Actor.allActors do
+		Actor.states[a.state].update(a, dt)
 	end
 end
 

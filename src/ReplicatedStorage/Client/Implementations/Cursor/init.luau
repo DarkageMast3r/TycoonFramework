@@ -5,13 +5,12 @@ local players = game:GetService("Players")
 
 local contracts = script.Parent.Parent.Contracts
 local common = replicatedStorage.Common
-local actionManager = require(contracts.ActionManager)
-local cursor = require(contracts.Cursor)
-local plot = require(common.Plot)
-local asset = require(common.Asset.Asset)
-local config = require(common.Config)
+local ActionManager = require(contracts.ActionManager)
+local Cursor = require(contracts.Cursor)
+local Asset = require(common.Asset.Asset)
+local Config = require(common.Config)
 
-cursor.current = {
+Cursor.current = {
 	pos = {
 		pos = Vector3.new(),
 		rot = 0,
@@ -23,9 +22,9 @@ cursor.current = {
 }
 local cursor_pos = Vector3.new()
 
-function cursor.asset_select(name)
-	cursor.current.type = asset.resolve_type(name)
-	cursor.current.asset = name
+function Cursor.asset_select(name)
+	Cursor.current.type = Asset.resolve_type(name)
+	Cursor.current.asset = name
 end
 
 
@@ -59,7 +58,7 @@ local function get_asset_model(p: Instance): Model?
 end
 
 
-function cursor.update_location(select_hit_instance: boolean)
+function Cursor.update_location(select_hit_instance: boolean)
 	local loc = userInputService:GetMouseLocation()
 	local ray = workspace.CurrentCamera:ViewportPointToRay(loc.X, loc.Y)
 	local filter = {}
@@ -74,12 +73,12 @@ function cursor.update_location(select_hit_instance: boolean)
 	
 	local results = workspace:Raycast(ray.Origin, ray.Direction * 512, params)
 	if not results then
-		cursor.current.pos.plot = nil
+		Cursor.current.pos.plot = nil
 		return
 	end
-	cursor.current.hit_instance = results.Instance
+	Cursor.current.hit_instance = results.Instance
 	local plot_folder = get_plot(results.Instance)
-	cursor.current.pos.plot = plot_folder
+	Cursor.current.pos.plot = plot_folder
 	
 	if not plot_folder then
 		return
@@ -101,9 +100,9 @@ function cursor.update_location(select_hit_instance: boolean)
 		local rel = gridPart.CFrame:PointToObjectSpace(pivot.Position)
 			+ gridPart.Size * Vector3.new(0.5, 0, 0.5)
 
-		rel /= config.cell.size
-		cursor.current.pos.rot = calculate_rotation(pivot.LookVector)
-		cursor.current.pos.pos = Vector3.new(
+		rel /= Config.cell.size
+		Cursor.current.pos.rot = calculate_rotation(pivot.LookVector)
+		Cursor.current.pos.pos = Vector3.new(
 			math.floor(rel.X),
 			math.floor(rel.Y),
 			math.floor(rel.Z)
@@ -118,9 +117,9 @@ function cursor.update_location(select_hit_instance: boolean)
 		local rel = gridPart.CFrame:PointToObjectSpace(cursorPos)
 			+ gridPart.Size * Vector3.new(0.5, 0, 0.5)
 
-		rel /= config.cell.size
+		rel /= Config.cell.size
 		cursor_pos = rel
-		cursor.current.pos.pos = Vector3.new(
+		Cursor.current.pos.pos = Vector3.new(
 			math.floor(rel.X),
 			math.floor(rel.Y),
 			math.floor(rel.Z)
@@ -129,18 +128,18 @@ function cursor.update_location(select_hit_instance: boolean)
 end
 
 
-function cursor.set_state_build()
-	cursor.tool_select("Build")
+function Cursor.set_state_build()
+	Cursor.tool_select("Build")
 end
 
 
-function cursor.set_state_delete()
-	cursor.tool_select("Delete")
+function Cursor.set_state_delete()
+	Cursor.tool_select("Delete")
 end
 
 
-function cursor.set_state_dragmode(mode)
-	cursor.current.dragmode = mode
+function Cursor.set_state_dragmode(mode)
+	Cursor.current.dragmode = mode
 end
 
 
@@ -148,14 +147,14 @@ local tools = {}
 local tool_current = ""
 
 
-function cursor.update()
+function Cursor.update()
 	if tools[tool_current] then
 		tools[tool_current].update()
 	end
 end
 
 
-function cursor.tool_select(tool)
+function Cursor.tool_select(tool)
 	if tools[tool_current] then
 		tools[tool_current].unload()
 	end
@@ -166,21 +165,21 @@ function cursor.tool_select(tool)
 end
 
 
-function cursor.tool_action_begin()
+function Cursor.tool_action_begin()
 	if tools[tool_current] then
 		tools[tool_current].begin()
 	end
 end
 
 
-function cursor.tool_action_end()
+function Cursor.tool_action_end()
 	if tools[tool_current] then
 		tools[tool_current].finish()
 	end
 end
 
 
-function cursor.tool_register(tool, load, unload, action_begin, action_end, update)
+function Cursor.tool_register(tool, load, unload, action_begin, action_end, update)
 	tools[tool] = {
 		load = load,
 		unload = unload,
@@ -191,16 +190,16 @@ function cursor.tool_register(tool, load, unload, action_begin, action_end, upda
 end
 
 
-actionManager.register("action", "press", function(pressed)
+ActionManager.register("action", "press", function(pressed)
 	if pressed then
-		cursor.tool_action_begin()
+		Cursor.tool_action_begin()
 	else
-		cursor.tool_action_end()
+		Cursor.tool_action_end()
 	end
 end)
-actionManager.register("rotate", "press", function(pressed: boolean)
+ActionManager.register("rotate", "press", function(pressed: boolean)
 	if pressed then
-		cursor.current.pos.rot = (cursor.current.pos.rot + 1) % 4
+		Cursor.current.pos.rot = (Cursor.current.pos.rot + 1) % 4
 	end
 end)
 

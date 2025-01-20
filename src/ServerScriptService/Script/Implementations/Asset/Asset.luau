@@ -3,22 +3,21 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local position = require(common.Data.Position)
-local asset = require(common.Asset.Asset)
-local plot = require(common.Plot)
+local Asset = require(common.Asset.Asset)
+local Plot = require(common.Plot)
 
 
-function asset.create_by_name(name)
+function Asset.create_by_name(name)
 	if name == "" then
 		return Instance.new("Model")
 	end
-	name = asset.set_key_resolve(asset.assets, name)
+	name = Asset.set_key_resolve(Asset.assets, name)
 	local asset = replicatedStorage.Assets:WaitForChild(name)
 	return asset:Clone()
 end
 
 
-function asset.without_modifiers(name)
+function Asset.without_modifiers(name)
 	local idx = name:find("%[")
 	if idx == nil then
 		return name
@@ -27,9 +26,9 @@ function asset.without_modifiers(name)
 end
 
 
-function asset.modifier_add(name, modifier)
-	local raw = asset.without_modifiers(name)
-	local modifiers = asset.modifier_get(modifier)
+function Asset.modifier_add(name, modifier)
+	local raw = Asset.without_modifiers(name)
+	local modifiers = Asset.modifier_get(modifier)
 	modifiers[modifier] = true
 	local modifier_list = {}
 	for modifier in modifiers do
@@ -39,9 +38,9 @@ function asset.modifier_add(name, modifier)
 end
 
 
-function asset.modifier_remove(name, modifier)
-	local raw = asset.without_modifiers(name)
-	local modifiers = asset.modifier_get(modifier)
+function Asset.modifier_remove(name, modifier)
+	local raw = Asset.without_modifiers(name)
+	local modifiers = Asset.modifier_get(modifier)
 	modifiers[modifier] = nil
 	local modifier_list = {}
 	for modifier in modifiers do
@@ -51,7 +50,7 @@ function asset.modifier_remove(name, modifier)
 end
 
 
-function asset.modifier_get(name)
+function Asset.modifier_get(name)
 	local idx = name:find("%[")
 	if idx == nil then
 		return {}
@@ -70,14 +69,14 @@ function asset.modifier_get(name)
 end
 
 
-function asset.resolve_type(name)
+function Asset.resolve_type(name)
 	local frag = name:split(".")
 	return frag[1]:lower()
 end
 
 
-function asset.move_to(model, pos)
-	local p = plot.get_by_folder(pos.plot)
+function Asset.move_to(model, pos)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return
 	end
@@ -93,12 +92,12 @@ function asset.move_to(model, pos)
 end
 
 
-local collisionmesh_cache: {[string]: asset.collisionmesh} = {}
+local collisionmesh_cache: {[string]: Asset.collisionmesh} = {}
 
 
-local function collisionmesh_parse(name: string): asset.collisionmesh
+local function collisionmesh_parse(name: string): Asset.collisionmesh
 	local layers = {}
-	local asset = asset.set_fetch(asset.assets, name)
+	local asset = Asset.set_fetch(Asset.assets, name)
 	for _, child in asset:GetChildren() do
 		if not child:IsA("BoolValue") then
 			continue
@@ -124,12 +123,12 @@ local function collisionmesh_parse(name: string): asset.collisionmesh
 end
 
 
-function asset.collisionmesh_get(name)
+function Asset.collisionmesh_get(name)
 	if name == "" then
 		return {}
 	end
 	
-	name = asset.set_key_resolve(asset.assets, name)
+	name = Asset.set_key_resolve(Asset.assets, name)
 	collisionmesh_cache[name] = collisionmesh_cache[name] or collisionmesh_parse(name)
 	return collisionmesh_cache[name]
 end

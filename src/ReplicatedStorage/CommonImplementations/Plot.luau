@@ -2,32 +2,31 @@
 local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local common = replicatedStorage.Common
-local plot = require(common.Plot)
-local asset = require(common.Asset.Asset)
-local position = require(common.Data.Position)
+local Plot = require(common.Plot)
+local Position = require(common.Data.Position)
 
 local plot_queries: {
 	[Folder]: {
 		[string]: { -- Layer
-			[string]: {position.position} -- Query -> {position}
+			[string]: {Position.position} -- Query -> {position}
 		}
 	}	
 } = {}
 local layers = {}
-plot.allPlots = {}
+Plot.allPlots = {}
 
 
-function plot.get_by_folder(folder)
+function Plot.get_by_folder(folder)
 	if folder == nil then
 		return nil
 	end
-	return plot.allPlots[folder]
+	return Plot.allPlots[folder]
 end
 
 
-function plot.get_by_owner(owner)
+function Plot.get_by_owner(owner)
 	local found = {}
-	for _, plot in plot.allPlots do
+	for _, plot in Plot.allPlots do
 		if plot.owner == owner then
 			table.insert(found, plot)
 		end
@@ -36,8 +35,8 @@ function plot.get_by_owner(owner)
 end
 
 
-function plot.update_push(pos)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.update_push(pos)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return
 	end
@@ -46,7 +45,7 @@ function plot.update_push(pos)
 end
 
 
-function plot.gridlayer_get(plot, name, height)
+function Plot.gridlayer_get(plot, name, height)
 	for _, layer in plot.layers do
 		if layer.height == height and layer.name == name then
 			return layer
@@ -56,20 +55,20 @@ function plot.gridlayer_get(plot, name, height)
 end
 
 
-function plot.get_asset(pos, layer)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.get_asset(pos, layer)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return ""
 	end
-	local gridlayer = plot.gridlayer_get(p, layer, pos.pos.Y)
+	local gridlayer = Plot.gridlayer_get(p, layer, pos.pos.Y)
 	if gridlayer == nil then
 		return ""
 	end
-	return plot.gridlayer_get_asset(gridlayer, pos)
+	return Plot.gridlayer_get_asset(gridlayer, pos)
 end
 
 
-function plot.gridlayer_get_computed(plot, name, height)
+function Plot.gridlayer_get_computed(plot, name, height)
 	for _, layer in plot.layers_computed do
 		if layer.height == height and layer.name == name then
 			return layer
@@ -79,17 +78,17 @@ function plot.gridlayer_get_computed(plot, name, height)
 end
 
 
-function plot.gridlayer_get_asset(gridlayer, pos)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.gridlayer_get_asset(gridlayer, pos)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return ""
 	end
-	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	local idx = Plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	return gridlayer.assets[idx] or ""
 end
 
 
-local function plotquery_position_update(p: plot.plot, pos: position.position, layerName: string, asset: string, insert: boolean)
+local function plotquery_position_update(p: Plot.plot, pos: Position.position, layerName: string, asset: string, insert: boolean)
 	if plot_queries[p.folder] == nil then
 		return
 	end
@@ -116,12 +115,12 @@ local function plotquery_position_update(p: plot.plot, pos: position.position, l
 end
 
 
-function plot.gridlayer_set_asset(gridlayer, pos, asset)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.gridlayer_set_asset(gridlayer, pos, asset)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return false
 	end
-	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	local idx = Plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	if gridlayer.assets[idx] == nil then
 		return false
 	end
@@ -132,43 +131,43 @@ function plot.gridlayer_set_asset(gridlayer, pos, asset)
 end
 
 
-function plot.gridlayer_get_metadata(gridlayer, pos): any
-	local p = plot.get_by_folder(pos.plot)
+function Plot.gridlayer_get_metadata(gridlayer, pos): any
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return nil
 	end
-	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	local idx = Plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	return gridlayer.metadata[idx]
 end
 
 
-function plot.gridlayer_set_metadata(gridlayer, pos, metadata)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.gridlayer_set_metadata(gridlayer, pos, metadata)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return
 	end
-	local idx = plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
+	local idx = Plot.layers[gridlayer.type].get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	gridlayer.metadata[idx] = metadata
 end
 
 
-function plot.gridlayer_get_collision(gridlayer, pos)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.gridlayer_get_collision(gridlayer, pos)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return false
 	end
-	local layer = plot.layers[gridlayer.type]
+	local layer = Plot.layers[gridlayer.type]
 	local idx = layer.get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	return gridlayer.collision[idx] or false
 end
 
 
-function plot.gridlayer_set_collision(gridlayer, pos, collision)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.gridlayer_set_collision(gridlayer, pos, collision)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return
 	end
-	local layer = plot.layers[gridlayer.type]
+	local layer = Plot.layers[gridlayer.type]
 	local idx = layer.get_index(p, pos.pos.X, pos.pos.Z, pos.rot)
 	if gridlayer.collision[idx] == nil then
 		return
@@ -177,8 +176,8 @@ function plot.gridlayer_set_collision(gridlayer, pos, collision)
 end
 
 
-function plot.collisionmesh_collides(pos, mesh)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.collisionmesh_collides(pos, mesh)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return false
 	end
@@ -188,12 +187,12 @@ function plot.collisionmesh_collides(pos, mesh)
 	for layer, data in mesh do
 		for _, node in data do
 			local pos2 = node.pos.pos
-			local relpos = position.translate(pos, pos2.Z, pos2.X, pos2.Y, node.pos.rot)
-			local gridlayer = plot.gridlayer_get(p, layer, relpos.pos.Y)
+			local relpos = Position.translate(pos, pos2.Z, pos2.X, pos2.Y, node.pos.rot)
+			local gridlayer = Plot.gridlayer_get(p, layer, relpos.pos.Y)
 			if gridlayer == nil then
 				continue
 			end
-			local filled = plot.gridlayer_get_collision(gridlayer, relpos)
+			local filled = Plot.gridlayer_get_collision(gridlayer, relpos)
 			if node.mode == 1 then
 				if filled then
 					collides = true
@@ -211,27 +210,27 @@ function plot.collisionmesh_collides(pos, mesh)
 end
 
 
-function plot.collisionmesh_place(pos, mesh)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.collisionmesh_place(pos, mesh)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return
 	end
 	for layer, data in mesh do
 		for _, node in data do
 			local pos2 = node.pos.pos
-			local relpos = position.translate(pos, pos2.Z, pos2.X, pos2.Y, node.pos.rot)
-			local gridlayer = plot.gridlayer_get(p, layer, relpos.pos.Y)
+			local relpos = Position.translate(pos, pos2.Z, pos2.X, pos2.Y, node.pos.rot)
+			local gridlayer = Plot.gridlayer_get(p, layer, relpos.pos.Y)
 			if gridlayer == nil then
 				continue
 			end
-			plot.gridlayer_set_collision(gridlayer, relpos, true)
+			Plot.gridlayer_set_collision(gridlayer, relpos, true)
 		end
 	end
 end
 
 
-function plot.collisionmesh_remove(pos, mesh)
-	local p = plot.get_by_folder(pos.plot)
+function Plot.collisionmesh_remove(pos, mesh)
+	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
 		return false
 	end
@@ -239,18 +238,18 @@ function plot.collisionmesh_remove(pos, mesh)
 	for layer, data in mesh do
 		for _, node in data do
 			local pos2 = node.pos.pos
-			local relpos = position.translate(pos, pos2.Z, pos2.X, pos2.Y, node.pos.rot)
-			local gridlayer = plot.gridlayer_get(p, layer, relpos.pos.Y)
+			local relpos = Position.translate(pos, pos2.Z, pos2.X, pos2.Y, node.pos.rot)
+			local gridlayer = Plot.gridlayer_get(p, layer, relpos.pos.Y)
 			if gridlayer == nil then
 				continue
 			end
-			plot.gridlayer_set_collision(gridlayer, relpos, false)
+			Plot.gridlayer_set_collision(gridlayer, relpos, false)
 		end
 	end
 end
 
 
-function plot.asset_seek(p, layerName, assetName)
+function Plot.asset_seek(p, layerName, assetName)
 	if not plot_queries[p.folder] then
 		plot_queries[p.folder] = {}
 	end
@@ -266,7 +265,7 @@ function plot.asset_seek(p, layerName, assetName)
 		if gridlayer.name ~= layerName then
 			continue
 		end
-		local layer = plot.layers[gridlayer.type]
+		local layer = Plot.layers[gridlayer.type]
 		for i, asset in gridlayer.assets do
 			if asset:find(assetName) then
 				table.insert(found, layer.get_position(p, i))

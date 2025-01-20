@@ -6,10 +6,9 @@ local players = game:GetService("Players")
 
 local contracts = serverScriptService.Script.Contracts
 local common = replicatedStorage.Common
-local position = require(common.Data.Position)
-local data = require(contracts.Data)
-local profileStore = require(contracts.ProfileStore)
-local asset = require(common.Asset.Asset)
+local Data = require(contracts.Data)
+local ProfileStore = require(contracts.ProfileStore)
+
 
 type diff_field<t> = {prev: t?, now: t?}
 type diff = {
@@ -22,7 +21,7 @@ local function datastore_create(name: string, stub: {[any]: any})
 		stub = stub,
 		profiles = {},
 		profiles_loading = {},
-		datastore = profileStore.New(name, stub),
+		datastore = ProfileStore.New(name, stub),
 		last_replicated = table.clone(stub)
 	}
 end
@@ -117,17 +116,17 @@ datastore_create("Data", {
 	currency = 0
 })
 
-function data.load_plot(player)
+function Data.load_plot(player)
 	return datastore_get("Plots", player, `plot_{player.UserId}`)
 end
 
 
-function data.load_data(player)
+function Data.load_data(player)
 	return datastore_get("Data", player, `data_{player.UserId}`)
 end
 
 
-function data.replicate_data(player)
+function Data.replicate_data(player)
 	local diff: diff = datastore_replicate_get_diff("Data", player, `data_{player.UserId}`)
 	if diff.currency then
 		replicatedStorage.Remotes.StatEvent:FireClient(player, "currency", diff.currency.now)

@@ -4,8 +4,8 @@ local textService = game:GetService("TextService")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local elements = require(contracts.UI.Elements)
-local asset = require(common.Asset.Asset)
+local Elements = require(contracts.UI.Elements)
+local Asset = require(common.Asset.Asset)
 
 
 local stack_colors = {}
@@ -43,7 +43,7 @@ local function text_get_size(text: string, bounds: Vector2?, font: Enum.Font?, t
 end
 
 
-function elements.style_push()
+function Elements.style_push()
 	table.insert(stack_colors, table.clone(colors))
 	table.insert(stack_udims, table.clone(udims))
 	table.insert(stack_numbers, table.clone(numbers))
@@ -51,7 +51,7 @@ function elements.style_push()
 end
 
 
-function elements.style_pop()
+function Elements.style_pop()
 	colors = table.remove(stack_colors) or colors
 	udims = table.remove(stack_udims) or udims
 	numbers = table.remove(stack_numbers) or numbers
@@ -59,28 +59,28 @@ function elements.style_pop()
 end
 
 
-function elements.style_set_color(option, color)
+function Elements.style_set_color(option, color)
 	colors[option] = color
 end
 
 
-function elements.style_set_udim(option, udim)
+function Elements.style_set_udim(option, udim)
 	udims[option] = udim
 end
 
 
-function elements.style_set_number(option, num)
+function Elements.style_set_number(option, num)
 	numbers[option] = num
 end
 
 
-function elements.style_set_font(option, font)
+function Elements.style_set_font(option, font)
 	fonts[option] = font
 end
 
 
-function elements.viewport.create_asset(name)
-	local displayAsset = asset.create_by_name(name)
+function Elements.viewport.create_asset(name)
+	local displayAsset = Asset.create_by_name(name)
 	local viewport = Instance.new("ViewportFrame")
 	displayAsset:PivotTo(CFrame.new(0, 0, 0))
 	displayAsset.Parent = viewport
@@ -100,7 +100,7 @@ function elements.viewport.create_asset(name)
 end
 
 
-function elements.create_texture(parent)
+function Elements.create_texture(parent)
 	local tex = Instance.new("CanvasGroup", parent)
 	tex.Size = UDim2.fromScale(1, 1)
 	tex.BackgroundTransparency = 1
@@ -108,7 +108,7 @@ function elements.create_texture(parent)
 end
 
 
-function elements.create_frame(parent, size, pos)
+function Elements.create_frame(parent, size, pos)
 	local frame = Instance.new("Frame", parent)
 	frame.Size = size or UDim2.fromScale(1, 1)
 	frame.Position = pos or UDim2.fromOffset(0, 0)
@@ -118,7 +118,7 @@ function elements.create_frame(parent, size, pos)
 end
 
 
-function elements.create_pill(parent, text, maxDir)
+function Elements.create_pill(parent, text, maxDir)
 	local pill = Instance.new("TextLabel", parent)
 	pill.BorderSizePixel = 0
 	pill.BackgroundColor3 = colors.bg_primary
@@ -137,7 +137,7 @@ function elements.create_pill(parent, text, maxDir)
 end
 
 
-function elements.create_button(parent)
+function Elements.create_button(parent)
 	local button = Instance.new("TextButton", parent)
 	button.BackgroundTransparency = 1
 	button.Modal = true
@@ -148,8 +148,8 @@ function elements.create_button(parent)
 end
 
 
-function elements.create_list(parent, padding, direction)
-	local frame = elements.create_frame(parent, UDim2.fromScale(1, 1), UDim2.fromOffset(0, 0))
+function Elements.create_list(parent, padding, direction)
+	local frame = Elements.create_frame(parent, UDim2.fromScale(1, 1), UDim2.fromOffset(0, 0))
 	local listLayout = Instance.new("UIListLayout", frame)
 	listLayout.Padding = padding
 	listLayout.FillDirection = direction or Enum.FillDirection.Horizontal
@@ -162,7 +162,7 @@ function elements.create_list(parent, padding, direction)
 end
 
 
-function elements.create_image(parent, id)
+function Elements.create_image(parent, id)
 	local img = Instance.new("ImageLabel", parent)
 	img.BackgroundTransparency = 1
 	img.Image = `rbxassetid://{id}`
@@ -172,7 +172,7 @@ function elements.create_image(parent, id)
 end
 
 
-function elements.create_text(parent, text, color)
+function Elements.create_text(parent, text, color)
 	local label = Instance.new("TextLabel", parent)
 	label.BorderSizePixel = 0
 	label.BackgroundTransparency = 1
@@ -184,7 +184,7 @@ function elements.create_text(parent, text, color)
 end
 
 
-function elements.create_radio(parent, callback, options)
+function Elements.create_radio(parent, callback, options)
 	local buttons: {Frame} = {}
 	local texts: {TextLabel} = {}
 	local color_selected = colors.bg_selected
@@ -203,31 +203,31 @@ function elements.create_radio(parent, callback, options)
 		runningLength += size.X
 	end
 	
-	local container = elements.create_frame(parent, UDim2.new(0, runningLength, 1, 0))
-	local texture = elements.create_texture(container)
-	elements.style_corner(texture)
-	elements.style_border(texture, color_unselected, 2)
+	local container = Elements.create_frame(parent, UDim2.new(0, runningLength, 1, 0))
+	local texture = Elements.create_texture(container)
+	Elements.style_corner(texture)
+	Elements.style_border(texture, color_unselected, 2)
 	
-	local list = elements.create_list(texture, UDim.new(0, 0))
+	local list = Elements.create_list(texture, UDim.new(0, 0))
 
 	for i, option in options do		
-		local frame = elements.create_frame(list, UDim2.new(0, sizes[i].X, 1, 0))
+		local frame = Elements.create_frame(list, UDim2.new(0, sizes[i].X, 1, 0))
 		frame.BackgroundTransparency = 0
 		frame.BackgroundColor3 = color_unselected
 
 		if option.image ~= nil then
-			local img = elements.create_image(frame, option.image)
+			local img = Elements.create_image(frame, option.image)
 			img.SizeConstraint = Enum.SizeConstraint.RelativeYY
 			img.Size = UDim2.fromScale(1, 1)
 		end
 		if option.text ~= nil then
-			local text = elements.create_text(frame, option.text)
+			local text = Elements.create_text(frame, option.text)
 			text.Size = UDim2.fromScale(1, 1)
 			text.TextColor3 = text_unselected
 			texts[i] = text
 		end
 		
-		elements.on_click(frame, function()
+		Elements.on_click(frame, function()
 			for _, frame in buttons do
 				frame.BackgroundColor3 = color_unselected
 			end
@@ -247,10 +247,10 @@ function elements.create_radio(parent, callback, options)
 end
 
 
-function elements.create_element_sequence(parent, ...)
+function Elements.create_element_sequence(parent, ...)
 	local items = {...}
 	
-	local container = elements.create_frame(parent, UDim2.fromScale(1, 1))
+	local container = Elements.create_frame(parent, UDim2.fromScale(1, 1))
 	local created_all: {GuiObject} = {}
 	local line_height = text_get_size("W").Y * 3
 	
@@ -263,7 +263,7 @@ function elements.create_element_sequence(parent, ...)
 	for i = 1, #items do
 		local item = items[i]
 		if typeof(item) == "string" then
-			local created = elements.create_text(container, item, "txt_primary")
+			local created = Elements.create_text(container, item, "txt_primary")
 			created.Size = UDim2.fromOffset(text_get_size(
 				item,
 				nil,
@@ -273,7 +273,7 @@ function elements.create_element_sequence(parent, ...)
 			created.LayoutOrder = i
 			table.insert(created_all, created)
 		elseif typeof(item) == "number" then
-			local created = elements.create_image(container, item)
+			local created = Elements.create_image(container, item)
 			created.ImageColor3 = color
 			created.Size = UDim2.fromOffset(line_height, line_height)
 			created.LayoutOrder = i
@@ -287,7 +287,7 @@ function elements.create_element_sequence(parent, ...)
 end
 
 
-function elements.clear(instance)
+function Elements.clear(instance)
 	for _, child in instance:GetChildren() do
 		if child:IsA("GuiBase") then
 			child:Destroy()
@@ -296,7 +296,7 @@ function elements.clear(instance)
 end
 
 
-function elements.on_click(instance, callback)
+function Elements.on_click(instance, callback)
 	if instance:IsA("TextButton") then
 		instance.MouseButton1Click:Connect(callback)
 		return
@@ -307,13 +307,13 @@ function elements.on_click(instance, callback)
 		return
 	end
 
-	local newBtn = elements.create_button(nil)
+	local newBtn = Elements.create_button(nil)
 	newBtn.Parent = instance
 	newBtn.MouseButton1Click:Connect(callback)
 end
 
 
-function elements.on_press(instance, callback)
+function Elements.on_press(instance, callback)
 	if instance:IsA("TextButton") then
 		instance.MouseButton1Down:Connect(callback)
 		return
@@ -324,18 +324,18 @@ function elements.on_press(instance, callback)
 		return
 	end
 
-	local newBtn = elements.create_button(nil)
+	local newBtn = Elements.create_button(nil)
 	newBtn.Parent = instance
 	newBtn.MouseButton1Down:Connect(callback)
 end
 
 
-function elements.style_corner(instance, roundness)
+function Elements.style_corner(instance, roundness)
 	Instance.new("UICorner", instance).CornerRadius = roundness or UDim.new(1, 0)
 end
 
 
-function elements.style_line_height(instance)
+function Elements.style_line_height(instance)
 	instance.Size = UDim2.new(
 		instance.Size.X.Scale,
 		instance.Size.X.Offset,
@@ -345,7 +345,7 @@ function elements.style_line_height(instance)
 end
 
 
-function elements.style_border(instance, color, thickness)
+function Elements.style_border(instance, color, thickness)
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = color
 	stroke.Thickness = thickness

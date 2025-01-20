@@ -53,5 +53,8 @@ return {
 	},
 	["Floor.Wood"] = {
 		price = 20
+	},
+	["Ceiling"] = {
+		price = 15
 	}
 }

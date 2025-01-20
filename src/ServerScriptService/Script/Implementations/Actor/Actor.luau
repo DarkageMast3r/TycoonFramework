@@ -4,9 +4,8 @@ local runService = game:GetService("RunService")
 
 local contracts = replicatedStorage.Client.Contracts
 local common = replicatedStorage.Common
-local actor = require(common.Actor.Actor)
-local position = require(common.Data.Position)
-local plot = require(common.Plot)
+local Actor = require(common.Actor.Actor)
+local Plot = require(common.Plot)
 
 
 for _, stateModule in script.Parent.States:GetChildren() do
@@ -14,7 +13,7 @@ for _, stateModule in script.Parent.States:GetChildren() do
 		continue
 	end
 	local stateData = require(stateModule)
-	actor.states[stateModule.Name] = {
+	Actor.states[stateModule.Name] = {
 		init = stateData.init,
 		update = stateData.update
 	}
@@ -29,8 +28,8 @@ local function id_generate()
 end
 
 
-function actor.create(pos, meshName, idHint)
-	local a: actor.actor = {
+function Actor.create(pos, meshName, idHint)
+	local a: Actor.actor = {
 		id = idHint or id_generate(),
 		state = "idle",
 		position = pos,
@@ -47,22 +46,22 @@ function actor.create(pos, meshName, idHint)
 end
 
 
-function actor.replicate(a)
+function Actor.replicate(a)
 	replicatedStorage.Remotes.ActorSpawnEvent:FireAllClients(a.position, a.meshName, a.id)
 end
 
 
-function actor.walk_to(a, pos)
+function Actor.walk_to(a, pos)
 	a.path = {}
 	a.target = nil
-	actor.switch_to_state(a, "moving")
+	Actor.switch_to_state(a, "moving")
 
 	local from = {
 		pos = a.position.pos:Floor(),
 		rot = pos.rot,
 		plot = pos.plot
 	}
-	local path = plot.pathfind_to(from, pos)
+	local path = Plot.pathfind_to(from, pos)
 	a.target = pos
 	a.path = path
 

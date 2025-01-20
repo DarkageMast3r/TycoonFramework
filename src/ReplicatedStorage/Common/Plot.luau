@@ -1,8 +1,8 @@
 --!strict
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local common = replicatedStorage.Common
-local position = require(common.Data.Position)
-local asset = require(common.Asset.Asset)
+local Position = require(common.Data.Position)
+local Asset = require(common.Asset.Asset)
 
 export type gridlayer = {
 	type: layer_type,
@@ -22,16 +22,16 @@ export type plot = {
 	owner: Player?,
 	dirty: boolean,
 	folder: Folder,
-	updates: {position.position},
+	updates: {Position.position},
 	layers_computed: {gridlayer}
 }
 
 export type layer_type = "center" | "edge"
 export type layer = {
 	get_index: (plot: plot, x: number, z: number, rotation: number) -> number,
-	get_position: (plot: plot, idx: number) -> position.position,
+	get_position: (plot: plot, idx: number) -> Position.position,
 	build: (plot: plot, gridlayer: gridlayer, destination: Instance) -> (),
-	build_cell: (p: plot, gridlayer: gridlayer, pos: position.position, destination: Instance) -> (),
+	build_cell: (p: plot, gridlayer: gridlayer, pos: Position.position, destination: Instance) -> (),
 	resize: (src: {string}, from: Vector2int16, to: Vector2int16) -> {string}
 }
 
@@ -41,8 +41,8 @@ return {
 } :: {
 	allPlots: {[Folder]: plot},
 	build: (plot: plot) -> (),
-	build_asset: (pos: position.position, name: string, asset: string) -> boolean,
-	get_asset: (pos: position.position, layer: string) -> string,
+	build_asset: (pos: Position.position, name: string, asset: string) -> boolean,
+	get_asset: (pos: Position.position, layer: string) -> string,
 	
 	get_by_owner: (owner: Player) -> {plot},
 	get_by_folder: (folder: Folder?) -> plot?,
@@ -55,22 +55,22 @@ return {
 	gridlayer_attach: (plot: plot, type: layer_type, name: string, height: number) -> (),
 	gridlayer_get: (plot: plot, name: string, height: number) -> gridlayer?,
 	gridlayer_get_computed: (plot: plot, name: string, height: number) -> gridlayer?,
-	gridlayer_get_asset: (layer: gridlayer, pos: position.position) -> string,
-	gridlayer_set_asset: (layer: gridlayer, pos: position.position, asset: string) -> boolean,
-	gridlayer_get_metadata: (layer: gridlayer, pos: position.position) -> any,
-	gridlayer_set_metadata: (layer: gridlayer, pos: position.position, metadata: any) -> (),
-	gridlayer_get_collision: (layer: gridlayer, pos: position.position) -> boolean,
-	gridlayer_set_collision: (layer: gridlayer, pos: position.position, filled: boolean) -> (),
+	gridlayer_get_asset: (layer: gridlayer, pos: Position.position) -> string,
+	gridlayer_set_asset: (layer: gridlayer, pos: Position.position, asset: string) -> boolean,
+	gridlayer_get_metadata: (layer: gridlayer, pos: Position.position) -> any,
+	gridlayer_set_metadata: (layer: gridlayer, pos: Position.position, metadata: any) -> (),
+	gridlayer_get_collision: (layer: gridlayer, pos: Position.position) -> boolean,
+	gridlayer_set_collision: (layer: gridlayer, pos: Position.position, filled: boolean) -> (),
 	
-	collisionmesh_collides: (pos: position.position, mesh: asset.collisionmesh) -> boolean,
-	collisionmesh_place: (pos: position.position, mesh:asset.collisionmesh) -> (),
-	collisionmesh_remove: (pos: position.position, mesh:asset.collisionmesh) -> (),
+	collisionmesh_collides: (pos: Position.position, mesh: Asset.collisionmesh) -> boolean,
+	collisionmesh_place: (pos: Position.position, mesh: Asset.collisionmesh) -> (),
+	collisionmesh_remove: (pos: Position.position, mesh: Asset.collisionmesh) -> (),
 	
 	pathfind_update_map: (p: plot) -> (),
-	pathfind_to: (from: position.position, to: position.position) -> {position.position},
+	pathfind_to: (from: Position.position, to: Position.position) -> {Position.position},
 	
 	replicate: (plot: plot) -> (),
-	update_push: (pos: position.position) -> (),
+	update_push: (pos: Position.position) -> (),
 	update_execute_all: (plot: plot) -> (),
 
 	layers: {
@@ -80,5 +80,5 @@ return {
 	save: (plot: plot) -> (),
 	load: (plot: plot, player: Player) -> (),
 	
-	asset_seek: (plot: plot, layerName: string, assetName: string) -> {position.position}
+	asset_seek: (plot: plot, layerName: string, assetName: string) -> {Position.position}
 }
