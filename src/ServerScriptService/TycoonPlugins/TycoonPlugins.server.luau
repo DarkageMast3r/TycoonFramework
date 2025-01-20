@@ -5,7 +5,9 @@ local starterGui = game:GetService("StarterGui")
 local starterPlayer = game:GetService("StarterPlayer")
 local selection = game:GetService("Selection")
 local contracts = replicatedStorage.OTF.Client.Contracts
+local common = replicatedStorage.OTF.Common
 local Elements = require(contracts.UI.Elements)
+local Asset = require(common.Asset.Asset)
 
 
 if not plugin then
@@ -26,9 +28,22 @@ end
 
 print("Bootloading plugin")
 bootload_folder(replicatedStorage.OTF.Client.Implementations.UI, true)
-
+bootload_folder(replicatedStorage.OTF.CommonImplementations, true)
+Asset.set_append(Asset.images, require(replicatedStorage.Assets.Images))
 
 local toolbar = plugin:CreateToolbar("OTF")
+
+
+local function style_push()
+	Elements.style_push()
+	Elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
+	Elements.style_set_color("bg_header", Color3.new(0.8, 0.2, 0.2))
+	Elements.style_set_color("bg_dark", Color3.new(0.3, 0.3, 0.3))
+	Elements.style_set_color("txt_primary", Color3.new(0, 0, 0))
+	Elements.style_set_color("txt_unselected", Color3.new(0, 0, 0))
+	Elements.style_set_number("font_size", 10)
+end
+style_push()
 
 
 local function create_button(name: string, description: string, icon: string, on_active: () -> ())
@@ -55,6 +70,7 @@ local function create_widget(name: string, description: string, icon: string, on
 		widget.Enabled = not widget.Enabled
 		button:SetActive(widget.Enabled)
 		if widget.Enabled then
+			style_push()
 			on_active(widget)
 		end
 	end)
@@ -77,13 +93,6 @@ local function module_load(
 
 	functions[module.type](name, module.description, `rbxassedid://{module.icon}`, module.on_active)
 end
-
-
-Elements.style_push()
-Elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
-Elements.style_set_color("txt_primary", Color3.new(0, 0, 0))
-Elements.style_set_color("txt_unselected", Color3.new(0, 0, 0))
-Elements.style_set_number("font_size", 10)
 
 for _, module in script.Parent:GetChildren() do
 	if module:IsA("ModuleScript") then

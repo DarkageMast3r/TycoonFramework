@@ -13,6 +13,8 @@ local colors = {
 	txt_primary = Color3.new(0, 0, 0),
 	bg_primary = Color3.new(1, 1, 1),
 	bg_selected = Color3.new(0.6, 0.8, 0.8),
+	bg_header = Color3.new(0, 0, 0),
+	bg_dark = Color3.new(0, 0, 0),
 	bg_unselected = Color3.new(0.3, 0.4, 0.4),
 	txt_selected = Color3.new(0, 0, 0)
 }
@@ -118,6 +120,19 @@ function Elements.create_frame(parent, size, pos)
 end
 
 
+function Elements.create_background(parent, color_background, color_border)
+	local frame = Instance.new("Frame", parent)
+	frame.Size = UDim2.fromScale(1, 1)
+	frame.Position = UDim2.fromOffset(0, 0)
+	frame.BackgroundColor3 = colors[color_background]
+	if color_border then
+		frame.BorderColor3 = colors[color_border]
+		frame.BorderSizePixel = 2
+	end
+	return frame
+end
+
+
 function Elements.create_pill(parent, text, maxDir)
 	local pill = Instance.new("TextLabel", parent)
 	pill.BorderSizePixel = 0
@@ -158,6 +173,16 @@ function Elements.create_list(parent, padding, direction)
 	uiPadding.PaddingBottom = padding
 	uiPadding.PaddingLeft = padding
 	uiPadding.PaddingRight = padding
+	return frame
+end
+
+
+function Elements.create_scrollbox(parent, size)
+	local frame = Instance.new("ScrollingFrame", parent)
+	frame.Size = UDim2.fromScale(1, 1)
+	frame.CanvasSize = size
+	frame.BackgroundTransparency = 1
+	frame.BorderSizePixel = 0
 	return frame
 end
 
@@ -365,6 +390,25 @@ function Elements.style_border(instance, color, thickness)
 	stroke.Thickness = thickness
 	stroke.LineJoinMode = Enum.LineJoinMode.Round
 	stroke.Parent = instance
+end
+
+
+function Elements.style_padding(parent, padding)
+	local actualPadding
+	if padding == nil then
+		actualPadding = udims.padding
+	elseif typeof(padding) == "UDim" then
+		actualPadding = padding
+	elseif typeof(padding) == "string" then
+		actualPadding = udims[padding]
+	end
+
+	local stroke = Instance.new("UIPadding")
+	stroke.PaddingTop = actualPadding
+	stroke.PaddingBottom = actualPadding
+	stroke.PaddingLeft = actualPadding
+	stroke.PaddingRight = actualPadding
+	stroke.Parent = parent
 end
 
 
