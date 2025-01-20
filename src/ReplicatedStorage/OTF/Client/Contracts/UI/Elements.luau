@@ -33,6 +33,7 @@ return {
 	create_pill: (parent: GuiBase?, text: string, maxDir: ("x" | "y")?) -> GuiObject,
 	create_button: (parent: GuiBase?) -> TextButton,
 	create_list: (parent: GuiBase?, padding: UDim, direction: Enum.FillDirection?) -> GuiObject,
+	create_grid: (parent: GuiBase?, padding: UDim?) -> Frame,
 	create_image: (parent: GuiBase?, id: number) -> ImageLabel,
 	create_radio: (parent: GuiBase?, callback: (string) -> (), options: {selectItem}) -> GuiObject,
 	create_element_sequence: (parent: GuiBase?, ...(string|number|Color3)) -> (Frame, ...GuiObject),

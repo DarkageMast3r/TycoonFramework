@@ -162,6 +162,20 @@ function Elements.create_list(parent, padding, direction)
 end
 
 
+function Elements.create_grid(parent, padding)
+	local frame = Elements.create_frame(parent)
+	local actualPadding = padding or udims.padding
+	local gridLayout = Instance.new("UIGridLayout", frame)
+	listLayout.Padding = actualPadding
+	local uiPadding = Instance.new("UIPadding", frame)
+	uiPadding.PaddingTop = actualPadding
+	uiPadding.PaddingBottom = actualPadding
+	uiPadding.PaddingLeft = actualPadding
+	uiPadding.PaddingRight = actualPadding
+	return frame
+end
+
+
 function Elements.create_image(parent, id)
 	local img = Instance.new("ImageLabel", parent)
 	img.BackgroundTransparency = 1

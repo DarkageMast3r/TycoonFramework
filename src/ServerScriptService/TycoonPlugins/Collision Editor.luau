@@ -1,121 +1,11 @@
 --!strict
-local serverScriptService = game:GetService("ServerScriptService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
-local starterGui = game:GetService("StarterGui")
-local starterPlayer = game:GetService("StarterPlayer")
 local selection = game:GetService("Selection")
 local contracts = replicatedStorage.OTF.Client.Contracts
 local Elements = require(contracts.UI.Elements)
 
-local month_codes = {
-	"jan", "feb", "mar",
-	"apr", "may", "jun",
-	"jul", "aug", "sep",
-	"oct", "nov", "dec"
-}
-local function compile_release()
-	local date = DateTime.now():ToUniversalTime()
-	local release = Instance.new("Folder")
-	release.Name = `Release {date.Year} {month_codes[date.Month]} {date.Day} @ {date.Hour}:{date.Minute}`
-
-	local items_to_store = {
-		replicatedStorage.Assets,
-		replicatedStorage.OTF,
-		replicatedStorage.Remotes,
-		serverScriptService.OTF,
-		serverScriptService.TycoonPlugins,
-		serverScriptService.Custom,
-		serverScriptService.Script,
-		starterGui.ScreenGui,
-		starterPlayer.StarterPlayerScripts.LocalScript
-	}
-	local src_lines = {}
-	table.insert(src_lines, `local release = workspace["{release.Name}"]`)
-	for _, item in items_to_store do
-		repeat
-			item = item.Parent
-		until item.Parent == game
-		if not release:FindFirstChild(item.ClassName) then
-			table.insert(src_lines, `local {item.ClassName} = game:GetService("{item.ClassName}")`)
-			Instance.new("Folder", release).Name = item.ClassName
-		end
-	end
-
-	for _, item in items_to_store do
-		local service = item
-		repeat
-			service = service.Parent
-		until service.Parent == game
-		item:Clone().Parent = release:WaitForChild(service.ClassName)
-		table.insert(src_lines, `release["{service.ClassName}"]["{item.Name}"].Parent = {item.Parent:GetFullName()}`)
-	end
-	table.insert(src_lines, "release:Destroy()")
-
-	local installer = Instance.new("Script")
-	installer.Source = table.concat(src_lines, "\n")
-	installer.Name = "Installer"
-	installer.Parent = release
-
-	release.Parent = workspace
-	selection:Set({release})
-end
-
-
-local function bootload_folder(folder: Folder, recursive: boolean?)
-	for _, module in folder:GetChildren() do
-		if module:IsA("Folder") and recursive then
-			bootload_folder(module, recursive)
-		end
-		if module:IsA("ModuleScript") then
-			local success = pcall(require, module:Clone())
-		end
-	end
-end
-
-
-local function apply_plugin_style()
-	Elements.style_push()
-	Elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
-	Elements.style_set_color("txt_primary", Color3.new(0, 0, 0))
-	Elements.style_set_color("txt_unselected", Color3.new(0, 0, 0))
-	Elements.style_set_number("font_size", 10)
-end
-
-print("Bootloading plugin")
-bootload_folder(replicatedStorage.OTF.Client.Implementations.UI, true)
-
-local toolbar = plugin:CreateToolbar("OTF")
-local compileButton = toolbar:CreateButton(
-	"Compiler",
-	"Compiler",
-	"rbxassetid://8740888472"
-)
-local pluginButton = toolbar:CreateButton(
-	"Collision Editor",
-	"Collision editor",
-	"rbxassetid://8740888472"
-)
-
-local widget = plugin:CreateDockWidgetPluginGui(
-	"Tycoon Plugins Collision Editor",
-	DockWidgetPluginGuiInfo.new(
-		Enum.InitialDockState.Right, --From what side gui appears
-		false, --Widget will be initially enabled
-		false, --Don't overdrive previouse enabled state
-		200, --default weight
-		300, --default height
-		150, --minimum weight (optional)
-		150 --minimum height (optional)
-	)
-)
-widget.Title = "Collision Editor"
-local frame = Instance.new("Frame")
-frame.Size = UDim2.fromScale(1, 1)
-frame.BorderSizePixel = 1
-frame.Parent = widget
-
+local frame = Elements.create_frame()
 local frame_content
-
 
 
 local layer_current = ""
@@ -261,7 +151,6 @@ end
 
 
 local function selectItem()
-	apply_plugin_style()
 	local selected = selection:Get()[1]
 	while selected.Parent ~= nil and not selected:IsA("Model") do
 		selected = selected.Parent
@@ -294,19 +183,8 @@ local function selectItem()
 end
 
 
-compileButton.Click:Connect(function()
-	compileButton:SetActive(false)
-	compile_release()
-end)
-
-pluginButton:SetActive(false)
-pluginButton.Click:Connect(function()
-	widget.Enabled = not widget.Enabled
-	if widget.Enabled then
-		return
-	end
-	apply_plugin_style()
-	
+local function on_active(widget)
+	frame.Parent = widget
 	Elements.clear(frame)
 	local topbar = Elements.create_frame(frame, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0))
 	frame_content = Elements.create_frame(frame, UDim2.new(1, 0, 1, -25), UDim2.new(0, 0, 0, 25))
@@ -318,4 +196,12 @@ pluginButton.Click:Connect(function()
 	Elements.on_click(btn_save, saveItem)
 	
 	Elements.style_pop()
-end)
+end
+
+
+return {
+	type = "widget",
+	description = "Edit the placement collisions of items",
+	icon = 8740888472,
+	on_active = on_active
+}
