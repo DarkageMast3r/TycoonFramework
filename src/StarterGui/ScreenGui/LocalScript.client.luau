@@ -3,14 +3,43 @@ local contextActionService = game:GetService("ContextActionService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 
-local contracts = replicatedStorage.Client.Contracts
-local common = replicatedStorage.Common
+local contracts = replicatedStorage.OTF.Client.Contracts
+local common = replicatedStorage.OTF.Common
 local Cursor = require(contracts.Cursor)
 local Toolbar = require(contracts.UI.Toolbar)
 local Elements = require(contracts.UI.Elements)
 
 local lst_toolbar = script.Parent.Toolbar
 local lst_topbar = script.Parent.Topbar
+
+
+local bootloaded_total = 0
+local bootloaded_success = 0
+local function bootload_folder(folder: Folder, recursive: boolean?)
+	for _, module in folder:GetChildren() do
+		if module:IsA("Folder") and recursive then
+			bootload_folder(module, recursive)
+		end
+		if module:IsA("ModuleScript") then
+			local success, message = pcall(require, module)
+			bootloaded_total += 1
+			if success then
+				bootloaded_success += 1
+			else
+				warn(message)
+			end
+		end
+	end
+end
+
+
+local function bootload()
+	bootload_folder(replicatedStorage.OTF.CommonImplementations, true)
+	bootload_folder(replicatedStorage.OTF.Client.Implementations.Asset, true)
+	bootload_folder(replicatedStorage.OTF.Client, true)
+end
+bootload()
+
 
 Elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
 Elements.style_set_color("txt_primary", Color3.new(0, 0, 0))

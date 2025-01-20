@@ -3,8 +3,8 @@ local contextActionService = game:GetService("ContextActionService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 
-local contracts = replicatedStorage.Client.Contracts
-local common = replicatedStorage.Common
+local contracts = replicatedStorage.OTF.Client.Contracts
+local common = replicatedStorage.OTF.Common
 local Plot = require(common.Plot)
 local Cursor = require(contracts.Cursor)
 local ActionManager = require(contracts.ActionManager)
@@ -16,8 +16,11 @@ local Asset = require(common.Asset.Asset)
 
 local bootloaded_total = 0
 local bootloaded_success = 0
-local function bootload_folder(folder: Folder)
+local function bootload_folder(folder: Folder, recursive: boolean?)
 	for _, module in folder:GetChildren() do
+		if module:IsA("Folder") and recursive then
+			bootload_folder(module, recursive)
+		end
 		if module:IsA("ModuleScript") then
 			local success, message = pcall(require, module)
 			bootloaded_total += 1
@@ -33,16 +36,9 @@ end
 
 local function bootload()
 	require(contracts.Parent.Implementations.ActionManager)
-	bootload_folder(replicatedStorage.CommonImplementations)
-	bootload_folder(replicatedStorage.CommonImplementations.Actor)
-	bootload_folder(replicatedStorage.CommonImplementations.Asset)
-	bootload_folder(replicatedStorage.CommonImplementations.Data)
-	bootload_folder(replicatedStorage.Client.Implementations)
-	bootload_folder(replicatedStorage.Client.Implementations.Actor)
-	bootload_folder(replicatedStorage.Client.Implementations.Asset)
-	bootload_folder(replicatedStorage.Client.Implementations.Cursor)
-	bootload_folder(replicatedStorage.Client.Implementations.UI)
-	bootload_folder(replicatedStorage.Common)
+	bootload_folder(replicatedStorage.OTF.CommonImplementations, true)
+	bootload_folder(replicatedStorage.OTF.Client.Implementations.Asset, true)
+	bootload_folder(replicatedStorage.OTF.Client, true)
 	print(`Succesfully loaded {bootloaded_success}/{bootloaded_total} modules`)
 
 	Asset.set_append_from_folder(Asset.assets, replicatedStorage.Assets.Models)

@@ -3,14 +3,14 @@ local testService = game:GetService("TestService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local serverScriptService = game:GetService("ServerScriptService")
 local server = serverScriptService.Script.Implementations
-local common = replicatedStorage.Common
+local common = replicatedStorage.OTF.Common
 
 local Position = require(common.Data.Position)
 local Plot = require(common.Plot)
 local Asset = require(common.Asset.Asset)
 local DragModes = require(common.DragModes)
 local Actor = require(common.Actor.Actor)
-require(serverScriptService.Script.Bootloader)()
+require(serverScriptService.OTF.Bootloader)()
 
 
 local p = Plot.create_from_folder(workspace.Grid1)

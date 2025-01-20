@@ -1,12 +1,15 @@
 --!strict
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local selection = game:GetService("Selection")
-local contracts = replicatedStorage.Client.Contracts
+local contracts = replicatedStorage.OTF.Client.Contracts
 local Elements = require(contracts.UI.Elements)
 
 
-local function bootload_folder(folder: Folder)
+local function bootload_folder(folder: Folder, recursive: boolean?)
 	for _, module in folder:GetChildren() do
+		if module:IsA("Folder") and recursive then
+			bootload_folder(module, recursive)
+		end
 		if module:IsA("ModuleScript") then
 			local success = pcall(require, module:Clone())
 		end
@@ -23,7 +26,7 @@ local function apply_plugin_style()
 end
 
 print("Bootloading plugin")
-bootload_folder(replicatedStorage.Client.Implementations.UI)
+bootload_folder(replicatedStorage.OTF.Client.Implementations.UI, true)
 
 local toolbar = plugin:CreateToolbar("Tycoon")
 local pluginButton = toolbar:CreateButton(
@@ -230,9 +233,10 @@ local function selectItem()
 end
 
 
+pluginButton:SetActive(false)
 pluginButton.Click:Connect(function()
 	widget.Enabled = not widget.Enabled
-	if not widget.Enabled then
+	if widget.Enabled then
 		return
 	end
 	apply_plugin_style()
