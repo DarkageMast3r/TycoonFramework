@@ -50,5 +50,7 @@ return {
 	style_corner: (instance: GuiObject, roundness: UDim?) -> (),
 	style_border: (instance: GuiObject, color: Color3, thickness: number) -> (),
 	style_padding: (instance: GuiObject, padding: UDim? | option_udim?) -> (),
+	style_ratio: (instance: GuiObject, ratio: number) -> (),
+	style_flex: (instance: GuiObject, grow: number?, shrink: number?) -> (),
 	style_line_height: (instance: GuiObject) -> ()
 }

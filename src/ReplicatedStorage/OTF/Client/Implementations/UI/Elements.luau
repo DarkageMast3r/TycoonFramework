@@ -219,6 +219,7 @@ function Elements.create_text(parent, text, color)
 	label.TextSize = numbers.font_size
 	label.Font = fonts.font_primary
 	label.TextColor3 = colors[color or "txt_primary"]
+	label.Size = UDim2.fromScale(1, 1)
 	return label
 end
 
@@ -390,6 +391,22 @@ function Elements.style_border(instance, color, thickness)
 	stroke.Thickness = thickness
 	stroke.LineJoinMode = Enum.LineJoinMode.Round
 	stroke.Parent = instance
+end
+
+
+function Elements.style_ratio(instance, ratio)
+	local aspectRatio = Instance.new("UIAspectRatioConstraint")
+	aspectRatio.AspectType = Enum.AspectType.ScaleWithParentSize
+	aspectRatio.AspectRatio = ratio
+	aspectRatio.Parent = instance
+end
+
+
+function Elements.style_flex(instance, grow, shrink)
+	local flex = Instance.new("UIFlexItem")
+	flex.FlexMode = Enum.UIFlexMode.Custom
+	flex.GrowRatio = grow or 0
+	flex.ShrinkRatio = shrink or 0
 end
 
 

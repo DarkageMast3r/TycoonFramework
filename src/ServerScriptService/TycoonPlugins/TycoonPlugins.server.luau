@@ -26,10 +26,9 @@ local function bootload_folder(folder: Folder, recursive: boolean?)
 	end
 end
 
-print("Bootloading plugin")
 bootload_folder(replicatedStorage.OTF.Client.Implementations.UI, true)
 bootload_folder(replicatedStorage.OTF.CommonImplementations, true)
-Asset.set_append(Asset.images, require(replicatedStorage.Assets.Images))
+Asset.set_append(Asset.images, require(replicatedStorage.Assets.Images:Clone()))
 
 local toolbar = plugin:CreateToolbar("OTF")
 
@@ -47,13 +46,11 @@ style_push()
 
 
 local function create_button(name: string, description: string, icon: string, on_active: () -> ())
-	print("Button", name, description, icon)
 	local button = toolbar:CreateButton(name, description, icon)
 	button.Click:Connect(on_active)
 end
 
 local function create_widget(name: string, description: string, icon: string, on_active: (widget: DockWidgetPluginGui) -> ())
-	print("Widget", name, description, icon)
 	local widget = plugin:CreateDockWidgetPluginGui(
 		`OTF-{name}`,
 		DockWidgetPluginGuiInfo.new(

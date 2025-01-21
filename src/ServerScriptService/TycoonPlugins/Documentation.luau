@@ -37,22 +37,34 @@ local frame
 
 local screens = {}
 
-function screens.topic(topic: topic)
-	frame:ClearAllChildren()
+local function create_topbar(parent)
 	local frame_topbar = Elements.create_background(
-		Elements.create_frame(frame, UDim2.new(1, 0, 0, 30)),
+		Elements.create_frame(parent, UDim2.new(1, 0, 0, 30)),
 		"bg_header", "bg_dark"
 	)
-	Elements.style_line_height(frame_topbar)
-	Elements.style_padding(frame_topbar)
+	Elements.create_list(frame_topbar, UDim.new(0, 5), Enum.FillDirection.Horizontal)
+	Elements.style_flex(frame_topbar, 0, 0)
+	return frame_topbar
+end
+
+
+function screens.topic(topic: topic)
+	frame:ClearAllChildren()
+	local root = Elements.create_list(frame, UDim.new(0, 0), Enum.FillDirection.Vertical)
+
+	local frame_topbar = create_topbar(root)
 	
-	local frame_content = Elements.create_frame(frame, UDim2.new(1, 0, 1, -30), UDim2.fromOffset(0, 30))
+	local btn_return = Elements.create_image(frame_topbar, Asset.set_fetch(Asset.images, "Icon.Arrow.Left"))
+	Elements.style_ratio(btn_return, 1)
+	Elements.style_flex(btn_return, 0, 0)
+
+	local frame_title = Elements.create_frame(frame_topbar, UDim2.new(1, 0, 1, 0))
+	Elements.create_text(frame_title, topic.title)
+	
+	local frame_content = Elements.create_frame(root)
 	Elements.style_padding(frame_content)
-	local _, btn_return = Elements.create_element_sequence(
-		frame_topbar,
-		Asset.set_fetch(Asset.images, "Icon.Arrow.Right"),
-		topic.title
-	)
+	Elements.style_flex(btn_return, 1, 0)
+
 	local scrollframe_content = Elements.create_scrollbox(frame_content, UDim2.new(1, 0, 0, 1000))
 	local text = Instance.new("TextLabel")
 	text.Size = UDim2.fromScale(1, 1)
@@ -67,19 +79,28 @@ function screens.topic(topic: topic)
 	Elements.on_click(btn_return, function()
 		screens.topics()
 	end)
-	frame:Clone().Parent = workspace
 end
 
 
 function screens.topics()
 	frame:ClearAllChildren()
-	local lst_topics = Elements.create_list(frame, UDim.new(0, 5), Enum.FillDirection.Vertical)
+	local root = Elements.create_list(frame, UDim.new(0, 0), Enum.FillDirection.Vertical)
+	local frame_topbar = create_topbar(root)
+	local text = Elements.create_text(frame_topbar, "Topics")
+	Elements.style_flex(text, 1, 0)
+
+	local frame_content = Elements.create_scrollbox(root, UDim2.new(1, 0, 0, 1000))
+	Elements.style_flex(frame_content, 1, 0)
+
+
+	local lst_topics = Elements.create_list(frame_content, UDim.new(0, 5), Enum.FillDirection.Vertical)
+
 	for _, topic in topics do
-		local topic_btn = Elements.create_text(lst_topics, topic.title)
-		Elements.style_line_height(topic_btn)
-		topic_btn.Size = UDim2.new(1, 0, 0, topic_btn.Size.Y.Offset * 3)
+		local topic_frame = Elements.create_frame(lst_topics)
+		Elements.style_line_height(topic_frame)
+		Elements.style_border(topic_frame, Color3.new(0.3, 0.3, 0.3), 1)
+		local topic_btn = Elements.create_text(topic_frame, topic.title)
 		Elements.on_click(topic_btn, function()
-			print("Clicked!")
 			screens.topic(topic)
 		end)
 	end
