@@ -5,6 +5,7 @@ export type argument_type =
 	| "Player"
 	| "position"
 	| "Vector3"
+	| "Folder"
 
 return {} :: {
 	bind_event: (event: RemoteEvent, callback: (...any) -> (), ...argument_type) -> ()

@@ -14,6 +14,7 @@ local function cell_create_center(colors: {Color3}, on_click: (rot: number) -> (
 	Elements.on_press(frame, function(x, y)
 		on_click(0)
 	end)
+	return frame
 end
 
 
@@ -26,6 +27,7 @@ local function cell_create_edge(colors: {Color3}, on_click: (rot: number) -> ())
 	end
 	
 	Elements.on_press(frame, function(x, y)
+		local imgsize = frame.AbsoluteSize.X
 		x -= frame.AbsolutePosition.X
 		y -= frame.AbsolutePosition.Y
 		local rot = 0
@@ -44,6 +46,7 @@ local function cell_create_edge(colors: {Color3}, on_click: (rot: number) -> ())
 		end
 		on_click(rot)
 	end)
+	return frame
 end
 
 

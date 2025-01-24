@@ -191,7 +191,7 @@ function Elements.create_grid(parent, padding)
 	local frame = Elements.create_frame(parent)
 	local actualPadding = padding or udims.padding
 	local gridLayout = Instance.new("UIGridLayout", frame)
-	listLayout.Padding = actualPadding
+	gridLayout.CellPadding = UDim2.new(actualPadding, actualPadding)
 	local uiPadding = Instance.new("UIPadding", frame)
 	uiPadding.PaddingTop = actualPadding
 	uiPadding.PaddingBottom = actualPadding

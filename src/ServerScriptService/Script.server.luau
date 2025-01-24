@@ -1,8 +1,10 @@
 --!strict
 local serverScriptService = game:GetService("ServerScriptService")
+local collectionService = game:GetService("CollectionService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
+
 local contracts = script.Parent.OTF.Contracts
 local common = replicatedStorage.OTF.Common
 local custom = script.Parent.Custom.Contracts
@@ -35,41 +37,26 @@ local function player_join(player: Player)
 	if runService:IsStudio() then
 		sessionData.currency = 1000000
 	end
-	
-	local p1 = Plot.create_from_folder(workspace.Grid1)
-	Plot.gridlayer_attach(p1, "center", "floor", 0)
-	Plot.gridlayer_attach(p1, "edge", "wall_inner", 0)
-	Plot.gridlayer_attach(p1, "edge", "wall_outer", 0)
-	Plot.gridlayer_attach(p1, "center", "ceiling", 0)
-	Plot.gridlayer_attach(p1, "edge", "asset", 0)
-	Plot.gridlayer_attach(p1, "edge", "light", 0)
-	Plot.gridlayer_attach(p1, "center", "floor", 1)
-	Plot.gridlayer_attach(p1, "edge", "wall_inner", 1)
-	Plot.gridlayer_attach(p1, "edge", "wall_outer", 1)
-	Plot.gridlayer_attach(p1, "center", "ceiling", 1)
-	Plot.gridlayer_attach(p1, "edge", "asset", 1)
-	Plot.gridlayer_attach(p1, "edge", "light", 1)
-	Plot.gridlayer_attach(p1, "center", "floor", 2)
-	Plot.gridlayer_attach(p1, "edge", "wall_inner", 2)
-	Plot.gridlayer_attach(p1, "edge", "wall_outer", 2)
-	Plot.gridlayer_attach(p1, "center", "ceiling", 2)
-	Plot.gridlayer_attach(p1, "edge", "asset", 2)
-	Plot.gridlayer_attach(p1, "edge", "light", 2)
 
-	Plot.claim(p1, player)
-	Plot.replicate(p1)
-	
-	Customer.spawn({
-		pos = Vector3.new(0, 0, 0),
-		rot = 0,
-		plot = p1.folder
-	}, "Npc")
+	for _, plot in Plot.allPlots do
+		Plot.replicate_to(plot, player)
+	end
+end
+
+
+local function try_claim(player: Player, plot_folder: Folder)
+	local plot = Plot.get_by_folder(plot_folder)
+	if plot == nil then
+		return
+	end
+	Plot.claim(plot, player)
 end
 
 
 local function player_leave(player: Player)
-	for _, p in Plot.get_by_owner(player) do
-		Plot.save(p)
+	for _, plot in Plot.get_by_owner(player) do
+		Plot.save(plot)
+		Plot.unclaim(plot, player)
 	end
 end
 
@@ -77,6 +64,12 @@ end
 local function main()
 	OTF.bootload_folder(serverScriptService.Custom.Implementations)
 	OTF.load()
+
+	collectionService:GetInstanceAddedSignal("Grid", Plot.create_from_folder)
+	for _, grid in collectionService:GetTagged("Grid") do
+		Plot.create_from_folder(grid)
+	end
+
 	Replication.bind_event(
 		replicatedStorage.Remotes.PlotBuildEvent,
 		Tycoon.build,
@@ -94,6 +87,12 @@ local function main()
 		"position", -- To
 		"string", -- Layer,
 		"string" -- dragMode
+	)
+	Replication.bind_event(
+		replicatedStorage.Remotes.PlotClaimEvent,
+		try_claim,
+		"Player",
+		"Folder"
 	)
 
 	Tycoon.on_build("Drawer", "asset", function(plot, position, asset, layer)

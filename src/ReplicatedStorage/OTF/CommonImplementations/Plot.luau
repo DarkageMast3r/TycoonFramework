@@ -35,6 +35,17 @@ function Plot.get_by_owner(owner)
 end
 
 
+function Plot.get_unclaimed()
+	local found = {}
+	for _, plot in Plot.allPlots do
+		if plot.owner == nil then
+			table.insert(found, plot)
+		end
+	end
+	return found
+end
+
+
 function Plot.update_push(pos)
 	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then

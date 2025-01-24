@@ -9,6 +9,21 @@ local Position = require(common.Data.Position)
 
 local layers = {}
 
+
+function Plot.claim(plot, player)
+	plot.owner = player
+	print(`{player.Name} claimed plot {plot.folder:GetFullName()}`)
+	return true
+end
+
+
+function Plot.unclaim(plot, player)
+	plot.owner = nil
+	print(`Unclaimed plot {plot.folder:GetFullName()}`)
+	return true
+end
+
+
 local function try_build(layer: Plot.gridlayer, destination: Instance, pos: Position.position, idx: number)
 	local asset_name = Asset.set_key_resolve(Asset.assets, layer.assets[idx])
 	if layer.assets_built[idx] == asset_name then

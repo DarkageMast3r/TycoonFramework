@@ -35,7 +35,7 @@ local toolbar = plugin:CreateToolbar("OTF")
 
 local function style_push()
 	Elements.style_push()
-	Elements.style_set_color("bg_primary", Color3.new(1, 1, 1))
+	Elements.style_set_color("bg_primary", Color3.new(0.2, 0.2, 0.8))
 	Elements.style_set_color("bg_header", Color3.new(0.8, 0.2, 0.2))
 	Elements.style_set_color("bg_dark", Color3.new(0.3, 0.3, 0.3))
 	Elements.style_set_color("txt_primary", Color3.new(0, 0, 0))

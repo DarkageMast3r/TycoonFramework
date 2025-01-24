@@ -46,6 +46,7 @@ return {
 	
 	get_by_owner: (owner: Player) -> {plot},
 	get_by_folder: (folder: Folder?) -> plot?,
+	get_unclaimed: (folder: Folder?) -> {plot},
 	create_from_folder: (folder: Folder) -> plot,
 	is_valid_folder: (folder: Instance) -> (boolean, string),
 	
@@ -70,6 +71,7 @@ return {
 	pathfind_to: (from: Position.position, to: Position.position) -> {Position.position},
 	
 	replicate: (plot: plot) -> (),
+	replicate_to: (plot: plot, player: Player) -> (),
 	update_push: (pos: Position.position) -> (),
 	update_execute_all: (plot: plot) -> (),
 
