@@ -166,6 +166,11 @@ local dragmodes = {
 		square = get_positions_wall_square,
 		line = get_positions_wall_line,
 		single = get_positions_single
+	},
+	ceiling = {
+		square = get_positions_floor_square,
+		line = get_positions_floor_line,
+		single = get_positions_single
 	}
 }
 

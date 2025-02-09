@@ -335,8 +335,8 @@ local function plot_init(p: Plot.plot)
 end
 
 
-function Plot.build(p)
-	if Plot.allPlots[p.folder] == nil then
+function Plot.build(p, reload)
+	if Plot.allPlots[p.folder] == nil or reload then
 		plot_init(p)
 	end
 	plot_merge(Plot.allPlots[p.folder], p)

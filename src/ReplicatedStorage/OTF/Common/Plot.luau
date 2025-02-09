@@ -40,7 +40,7 @@ return {
 	layers = {}
 } :: {
 	allPlots: {[Folder]: plot},
-	build: (plot: plot) -> (),
+	build: (plot: plot, rebuild: boolean?) -> (),
 	build_asset: (pos: Position.position, name: string, asset: string) -> boolean,
 	get_asset: (pos: Position.position, layer: string) -> string,
 	

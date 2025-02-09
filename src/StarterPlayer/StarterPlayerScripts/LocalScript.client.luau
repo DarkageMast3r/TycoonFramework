@@ -54,7 +54,7 @@ ActionManager.bind("rotate", Enum.KeyCode.R)
 
 
 local function on_plot_load(p)
-	Plot.build(p)
+	Plot.build(p, true)
 end
 replicatedStorage.Remotes.PlotReplicateEvent.OnClientEvent:Connect(on_plot_load)
 replicatedStorage.Remotes.PlotReplicateEvent:FireServer()

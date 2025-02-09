@@ -33,7 +33,7 @@ function Plot.create_from_folder(folder)
 	}
 	Plot.allPlots[folder] = plot
 
-	for layer = 1, Config.plot.layer_count do
+	for layer = 0, Config.plot.layer_count-1 do
 		for layer_name, layer_type in Config.plot.layers do
 			Plot.gridlayer_attach(plot, layer_type, layer_name, layer)
 		end
