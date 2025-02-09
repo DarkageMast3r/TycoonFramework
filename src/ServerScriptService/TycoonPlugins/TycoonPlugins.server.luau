@@ -93,6 +93,6 @@ end
 
 for _, module in script.Parent:GetChildren() do
 	if module:IsA("ModuleScript") then
-		module_load(module.Name, require(module))
+		module_load(module.Name, require(module:Clone()))
 	end
 end
