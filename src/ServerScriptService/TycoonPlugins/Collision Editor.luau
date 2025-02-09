@@ -161,9 +161,14 @@ local function selectItem()
 	
 	Elements.clear(frame_content)
 
-	local layerList_frame = Elements.create_frame(frame_content, UDim2.new(0, 100, 1, 0), UDim2.new(0, 0, 0, 0))
-	local content = Elements.create_frame(frame_content, UDim2.new(1, -100, 1, 0), UDim2.new(0, 100, 0, 0))
-	local list_layers = Elements.create_list(layerList_frame, UDim.new(0, 5), Enum.FillDirection.Vertical)
+	local frame_allcontent = Elements.create_list(frame_content, UDim.new(0, 0), Enum.FillDirection.Horizontal)
+	local layerList_frame = Elements.create_frame(frame_allcontent, UDim2.new(0, 100, 1, 0))
+	Elements.style_flex(layerList_frame, 0, 0)
+	
+	local content = Elements.create_frame(frame_allcontent, UDim2.new(1, 0, 1, 0), UDim2.new(0, 100, 0, 0))
+	Elements.style_flex(content, 1, 0)
+
+	local list_layers = Elements.create_list(Elements.create_background(layerList_frame, "bg_primary", "bg_dark"), UDim.new(0, 5), Enum.FillDirection.Vertical)
 	local layers: {[string]: string} = {
 		Wall = "wall_outer",
 		Decoration = "wall_inner",
@@ -186,10 +191,15 @@ end
 local function on_active(widget)
 	frame.Parent = widget
 	Elements.clear(frame)
-	local topbar = Elements.create_frame(frame, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0))
-	frame_content = Elements.create_frame(frame, UDim2.new(1, 0, 1, -25), UDim2.new(0, 0, 0, 25))
-	local topbar_list = Elements.create_list(topbar, UDim.new(0, 5))
+	local root = Elements.create_list(frame, UDim.new(0, 0), Enum.FillDirection.Vertical)
+	local topbar = Elements.create_background(
+		Elements.create_frame(root, UDim2.new(1, 0, 0, 30)),
+		"bg_header", "bg_dark"
+	)
+	frame_content = Elements.create_frame(root)
+	Elements.style_flex(frame_content, 1, 0)
 
+	local topbar_list = Elements.create_list(topbar, UDim.new(0, 5), Enum.FillDirection.Horizontal)
 	local btn_select = Elements.create_pill(topbar_list, "Select")
 	local btn_save = Elements.create_pill(topbar_list, "Save")
 	Elements.on_click(btn_select, selectItem)

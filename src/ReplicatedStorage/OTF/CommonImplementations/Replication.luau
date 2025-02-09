@@ -31,6 +31,8 @@ local function scheme_matches(scheme: {Replication.argument_type}, ...)
 			matches = matches and Position.is_valid(value)
 		elseif t == "Vector3" then
 			matches = matches and typeof(value) == "Vector3"
+		elseif t == "Folder" then
+			matches = matches and typeof(value) == "Instance" and value:IsA("Folder")
 		else
 			error("Unhandled argument type "..t)
 		end

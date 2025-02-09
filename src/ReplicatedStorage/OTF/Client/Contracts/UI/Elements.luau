@@ -7,6 +7,8 @@ export type selectItem = {
 export type option_color = "bg_primary"
 	| "bg_selected"
 	| "bg_unselected"
+	| "bg_header"
+	| "bg_dark"
 	| "txt_primary"
 	| "txt_unselected"
 export type option_udim = "padding"
@@ -29,10 +31,12 @@ return {
 	
 	create_texture: (parent: GuiBase?) -> CanvasGroup,
 	create_frame: (parent: GuiBase?, size: UDim2?, position: UDim2?) -> Frame,
+	create_background: (parent: GuiBase?, color_background: option_color, color_border: option_color?) -> Frame,
 	create_text: (parent: GuiBase?, text: string, color: option_color?) -> TextLabel,
 	create_pill: (parent: GuiBase?, text: string, maxDir: ("x" | "y")?) -> GuiObject,
 	create_button: (parent: GuiBase?) -> TextButton,
 	create_list: (parent: GuiBase?, padding: UDim, direction: Enum.FillDirection?) -> GuiObject,
+	create_scrollbox: (parent: GuiBase?, size: UDim2) -> ScrollingFrame,
 	create_grid: (parent: GuiBase?, padding: UDim?) -> Frame,
 	create_image: (parent: GuiBase?, id: number) -> ImageLabel,
 	create_radio: (parent: GuiBase?, callback: (string) -> (), options: {selectItem}) -> GuiObject,
@@ -45,5 +49,8 @@ return {
 	
 	style_corner: (instance: GuiObject, roundness: UDim?) -> (),
 	style_border: (instance: GuiObject, color: Color3, thickness: number) -> (),
+	style_padding: (instance: GuiObject, padding: UDim? | option_udim?) -> (),
+	style_ratio: (instance: GuiObject, ratio: number) -> (),
+	style_flex: (instance: GuiObject, grow: number?, shrink: number?) -> (),
 	style_line_height: (instance: GuiObject) -> ()
 }

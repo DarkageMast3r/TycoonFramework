@@ -52,18 +52,6 @@ bootload()
 ActionManager.bind("action", Enum.UserInputType.MouseButton1)
 ActionManager.bind("rotate", Enum.KeyCode.R)
 
-local itemlist = {
-	"Floor.Wood",
-	"Floor.Marble",
-	"Floor.Carpet",
-	"Floor.Carpet.Red",
-	"Floor.Carpet.Green",
-	"Floor.Squirgle",
-	"Wall_Outer.Brick",
-	"Wall_Outer.Wood",
-	"Wall_Outer.Squirgle",
-	"Ceiling.Office"
-}
 
 local function on_plot_load(p)
 	Plot.build(p)
@@ -124,6 +112,29 @@ Replication.bind_event(
 	"string",
 	"string"
 )
+Replication.bind_event(
+	replicatedStorage.Remotes.PlotClaimEvent,
+	function(folder: Folder, player: Player)
+		local plot = Plot.get_by_folder(folder)
+		if plot == nil then
+			return
+		end
+		Plot.claim(plot, player)
+	end,
+	"Folder",
+	"Player"
+)
+Replication.bind_event(
+	replicatedStorage.Remotes.PlotClaimEvent,
+	function(folder: Folder)
+		local plot = Plot.get_by_folder(folder)
+		if plot == nil then
+			return
+		end
+		Plot.unclaim(plot, nil)
+	end,
+	"Folder"
+)
 
 
 local function update(dt: number)
@@ -131,3 +142,12 @@ local function update(dt: number)
 	Actor.tick(dt)
 end
 runService.Heartbeat:Connect(update)
+
+repeat
+	task.wait()
+until #Plot.get_unclaimed() > 0
+
+local unclaimed = Plot.get_unclaimed()
+local plot = unclaimed[math.random(#unclaimed)]
+
+replicatedStorage.Remotes.PlotClaimEvent:FireServer(plot.folder)

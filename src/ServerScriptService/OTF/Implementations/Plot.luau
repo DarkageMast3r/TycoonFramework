@@ -12,6 +12,7 @@ local Asset = require(common.Asset.Asset)
 local Data = require(contracts.Data)
 local NodeGraph = require(common.Data.Nodegraph)
 local Tycoon = require(common.Game.Tycoon)
+local Config = require(common.Config)
 
 
 function Plot.create_from_folder(folder)
@@ -21,7 +22,7 @@ function Plot.create_from_folder(folder)
 	end
 
 	local grid = folder:WaitForChild("Grid") :: BasePart
-	local p: Plot.plot = {
+	local plot: Plot.plot = {
 		dirty = false,
 		layers = {},
 		folder = folder,
@@ -30,8 +31,16 @@ function Plot.create_from_folder(folder)
 		updates = {},
 		layers_computed = {}
 	}
-	Plot.allPlots[folder] = p
-	return p
+	Plot.allPlots[folder] = plot
+
+	for layer = 1, Config.plot.layer_count do
+		for layer_name, layer_type in Config.plot.layers do
+			Plot.gridlayer_attach(plot, layer_type, layer_name, layer)
+		end
+	end
+	Plot.replicate(plot)
+
+	return plot
 end
 
 
@@ -50,12 +59,13 @@ function Plot.is_valid_folder(folder)
 end
 
 
-function Plot.claim(p, player)
-	if p.owner ~= nil then
+function Plot.claim(plot, player)
+	if plot.owner ~= nil then
 		return false
 	end
-	Plot.load(p, player)
-	p.owner = player
+	Plot.load(plot, player)
+	plot.owner = player
+	replicatedStorage.Remotes.PlotClaimEvent:FireAllClients(plot.folder, player)
 	return true
 end
 
@@ -65,6 +75,7 @@ function Plot.unclaim(plot, player)
 		return false
 	end
 	plot.owner = nil
+	replicatedStorage.Remotes.PlotClaimEvent:FireAllClients(plot.folder)
 	-- TODO: Clear all built assets
 	return true
 end
@@ -135,23 +146,20 @@ end
 
 
 function Plot.replicate(plot)
-	if not plot.dirty then
-		return
-	end
-	plot.dirty = false
 	replicatedStorage.Remotes.PlotReplicateEvent:FireAllClients(plot)
-	table.clear(plot.updates)
+end
+
+
+function Plot.replicate_to(plot, player)
+	replicatedStorage.Remotes.PlotReplicateEvent:FireClient(player, plot)
 end
 
 
 replicatedStorage.Remotes.PlotReplicateEvent.OnServerEvent:Connect(function(player: Player)
 	for _, p in Plot.allPlots do
-		if p.owner == player then
-			replicatedStorage.Remotes.PlotReplicateEvent:FireClient(player, p)
-		end
+		replicatedStorage.Remotes.PlotReplicateEvent:FireClient(player, p)
 	end
 end)
-
 
 
 function Plot.save(p)
