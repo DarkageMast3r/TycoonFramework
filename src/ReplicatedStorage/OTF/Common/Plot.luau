@@ -22,8 +22,7 @@ export type plot = {
 	owner: Player?,
 	dirty: boolean,
 	folder: Folder,
-	updates: {Position.position},
-	layers_computed: {gridlayer}
+	updates: {Position.position}
 }
 
 export type layer_type = "center" | "edge"
@@ -55,7 +54,7 @@ return {
 	
 	gridlayer_attach: (plot: plot, type: layer_type, name: string, height: number) -> (),
 	gridlayer_get: (plot: plot, name: string, height: number) -> gridlayer?,
-	gridlayer_get_computed: (plot: plot, name: string, height: number) -> gridlayer?,
+	gridlayer_get_by_height: (plot: plot?, height: number) -> {[string]: gridlayer},
 	gridlayer_get_asset: (layer: gridlayer, pos: Position.position) -> string,
 	gridlayer_set_asset: (layer: gridlayer, pos: Position.position, asset: string) -> boolean,
 	gridlayer_get_metadata: (layer: gridlayer, pos: Position.position) -> any,

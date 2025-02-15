@@ -1,20 +1,26 @@
 --!strict
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local selection = game:GetService("Selection")
-local contracts = replicatedStorage.OTF.Client.Contracts
+local otf = replicatedStorage.OTF
+local contracts = otf.Client.Contracts
+local common = otf.Common
 local Elements = require(contracts.UI.Elements)
+local Config = require(common.Config)
 
 local frame = Elements.create_frame()
 local frame_content
 
 
 local layer_current = ""
-local layers = {
-	wall_outer = table.create(49 * 4, 0),
-	wall_inner = table.create(49 * 4, 0),
-	asset = table.create(49 * 4, 0),
-	light = table.create(49 * 4, 0)
-}
+local layers = {}
+local grid_size = 7
+for layer_name, layer_type in Config.plot.layers do
+	if layer_type == "center" then
+		layers[layer_name] = table.create(grid_size * grid_size)
+	elseif layer_type == "edge" then
+		layers[layer_name] = table.create(grid_size * grid_size * 4)
+	end
+end
 local colors = {
 	[0] = Color3.new(0.7, 0.7, 0.7),
 	Color3.new(0.3, 0.8, 0.3),
@@ -44,7 +50,7 @@ local function createEdgeGrid(parent, size: number): Frame
 			)
 			local indices = {}
 			local images = {}
-			
+
 			for rot = 0, 3 do
 				i += 1
 				local img = Elements.create_image(frame, 96753806776558)
@@ -53,7 +59,7 @@ local function createEdgeGrid(parent, size: number): Frame
 				indices[rot] = i
 				images[rot] = img
 			end
-			
+
 			Elements.on_press(frame, function(x, y)
 				x -= frame.AbsolutePosition.X
 				y -= frame.AbsolutePosition.Y
@@ -75,6 +81,43 @@ local function createEdgeGrid(parent, size: number): Frame
 				local img = images[rot]
 				layer_selected[index] = (layer_selected[index] + 1) % 3
 				img.ImageColor3 = colors[layer_selected[index]]
+			end)
+		end
+	end
+	return parentFrame
+end
+
+
+local function createCenterGrid(parent, size: number): Frame
+	local padding = 2
+	local imgsize = 32
+	local parentFrame = Elements.create_frame(
+		parent,
+		UDim2.fromOffset(
+			(padding + imgsize) * (size * 2 + 1) - padding,
+			(padding + imgsize) * (size * 2 + 1) - padding
+		),
+		UDim2.fromOffset(0, 0)
+	)
+	local i = 0
+	local layer_selected = layers[layer_current]
+	for x = -size, size do
+		for z = -size, size do
+			local frame = Elements.create_frame(
+				parentFrame,
+				UDim2.fromOffset(imgsize, imgsize),
+				UDim2.fromOffset((x+size) * (imgsize + padding), (z+size) * (imgsize + padding))
+			)
+			frame.BackgroundTransparency = 0
+
+			i += 1
+			local index = i
+			print(layer_selected, index, layer_selected[index], colors)
+			frame.BackgroundColor3 = colors[layer_selected[index]]
+
+			Elements.on_press(frame, function(x, y)
+				layer_selected[index] = (layer_selected[index] + 1) % 3
+				frame.BackgroundColor3 = colors[layer_selected[index]]
 			end)
 		end
 	end
@@ -108,6 +151,27 @@ local function saveEdgeLayer(item, name, size)
 end
 
 
+local function saveCenterLayer(item, name, size)
+	local layer_selected = layers[name]
+	local i = 0
+	for x = -size, size do
+		for z = -size, size do
+			i += 1
+			if layer_selected[i] == 0 then
+				continue
+			end
+			local bool = Instance.new("BoolValue")
+			bool.Value = layer_selected[i] == 1
+			bool:SetAttribute("x", x)
+			bool:SetAttribute("z", z)
+			bool:SetAttribute("rot", 0)
+			bool:SetAttribute("layer", name)
+			bool.Parent = item
+		end
+	end
+end
+
+
 local function saveItem()
 	if item_selected == nil then
 		return
@@ -119,10 +183,13 @@ local function saveItem()
 		end
 	end
 
-	saveEdgeLayer(item_selected, "wall_inner", 3)
-	saveEdgeLayer(item_selected, "wall_outer", 3)
-	saveEdgeLayer(item_selected, "asset", 3)
-	saveEdgeLayer(item_selected, "light", 3)
+	for layer_name, layer_type in Config.plot.layers do
+		if layer_type == "edge" then
+			saveEdgeLayer(item_selected, layer_name, (grid_size - 1) / 2)
+		elseif layer_type == "center" then
+			saveCenterLayer(item_selected, layer_name, (grid_size - 1) / 2)
+		end
+	end
 end
 
 
@@ -144,7 +211,15 @@ local function loadItem()
 		local z = boolValue:GetAttribute("z") :: number
 		local rot = boolValue:GetAttribute("rot") :: number
 		local layer_name = boolValue:GetAttribute("layer") :: string
-		local i = rot + 4 * ((z+3) + (x+3) * 7) + 1
+		local layer_type = Config.plot.layers[layer_name]
+		local i = 0
+		if layer_type == "edge" then
+			i = rot + 4 * ((z+3) + (x+3) * 7) + 1
+		elseif layer_type == "center" then
+			i = ((z+3) + (x+3) * 7) + 1
+		else
+			error("Unexpected layer type")
+		end
 		layers[layer_name][i] = boolValue.Value and 1 or 2
 	end
 end
@@ -169,19 +244,17 @@ local function selectItem()
 	Elements.style_flex(content, 1, 0)
 
 	local list_layers = Elements.create_list(Elements.create_background(layerList_frame, "bg_primary", "bg_dark"), UDim.new(0, 5), Enum.FillDirection.Vertical)
-	local layers: {[string]: string} = {
-		Wall = "wall_outer",
-		Decoration = "wall_inner",
-		Asset = "asset",
-		Light = "light"
-	}
 	
-	for name, code in layers do
-		local btn = Elements.create_pill(list_layers, name, "x")
+	for layer_name in Config.plot.layers do
+		local btn = Elements.create_pill(list_layers, layer_name, "x")
 		Elements.on_click(btn, function()
 			Elements.clear(content)
-			layer_current = code
-			createEdgeGrid(content, 3)
+			layer_current = layer_name
+			if Config.plot.layers[layer_name] == "edge" then
+				createEdgeGrid(content, (grid_size - 1) / 2)
+			else
+				createCenterGrid(content, (grid_size - 1) / 2)
+			end
 		end)
 	end
 	Elements.style_pop()

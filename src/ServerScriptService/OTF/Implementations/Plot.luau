@@ -28,8 +28,7 @@ function Plot.create_from_folder(folder)
 		folder = folder,
 		origin = grid.CFrame,
 		size = Vector2int16.new(grid.Size.X / 4, grid.Size.Z / 4),
-		updates = {},
-		layers_computed = {}
+		updates = {}
 	}
 	Plot.allPlots[folder] = plot
 
@@ -100,16 +99,6 @@ function Plot.gridlayer_attach(plot, type, name, height)
 		assets_models = {},
 		metadata = {}
 	})
-	table.insert(plot.layers_computed, {
-		type = type,
-		name = name,
-		height = height,
-		collision = table.create(asset_count, false),
-		assets = table.create(asset_count, ""),
-		assets_built = {},
-		assets_models = {},
-		metadata = {}
-	})
 end
 
 
@@ -163,6 +152,9 @@ end)
 
 
 function Plot.save(p)
+	if not Config.behaviour.plots_are_persistent then
+		return
+	end
 	local owner = p.owner
 	if owner == nil then
 		return
@@ -195,6 +187,9 @@ end
 
 
 function Plot.load(p, player)
+	if not Config.behaviour.plots_are_persistent then
+		return
+	end
 	local serialized = Data.load_plot(player)
 	local last = tick()
 	for _, layer in serialized.layers do

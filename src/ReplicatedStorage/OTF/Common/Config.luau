@@ -1,4 +1,7 @@
 return {
+	behaviour = {
+		plots_are_persistent = false
+	},
 	cell = {
 		size = Vector3.new(4, 9, 4)
 	},
@@ -11,6 +14,6 @@ return {
 			asset = "edge",
 			light = "edge"
 		} :: {[string]: ("center" | "edge")},
-		layer_count = 3
+		layer_count = 1
 	}
 }

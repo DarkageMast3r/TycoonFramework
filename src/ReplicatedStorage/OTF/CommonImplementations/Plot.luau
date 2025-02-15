@@ -66,6 +66,20 @@ function Plot.gridlayer_get(plot, name, height)
 end
 
 
+function Plot.gridlayer_get_by_height(plot, height)
+	local layers = {}
+	if plot == nil then
+		return layers
+	end
+	for _, layer in plot.layers do
+		if layer.height == height then
+			layers[layer.name] = layer
+		end
+	end
+	return layers
+end
+
+
 function Plot.get_asset(pos, layer)
 	local p = Plot.get_by_folder(pos.plot)
 	if p == nil then
@@ -76,16 +90,6 @@ function Plot.get_asset(pos, layer)
 		return ""
 	end
 	return Plot.gridlayer_get_asset(gridlayer, pos)
-end
-
-
-function Plot.gridlayer_get_computed(plot, name, height)
-	for _, layer in plot.layers_computed do
-		if layer.height == height and layer.name == name then
-			return layer
-		end
-	end
-	return nil
 end
 
 

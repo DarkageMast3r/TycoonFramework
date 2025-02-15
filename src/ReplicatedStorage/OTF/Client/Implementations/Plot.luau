@@ -6,6 +6,7 @@ local common = replicatedStorage.OTF.Common
 local Plot = require(common.Plot)
 local Asset = require(common.Asset.Asset)
 local Position = require(common.Data.Position)
+local Config = require(common.Config)
 
 local layers = {}
 
@@ -21,27 +22,6 @@ function Plot.unclaim(plot, player)
 	plot.owner = nil
 	print(`Unclaimed plot {plot.folder:GetFullName()}`)
 	return true
-end
-
-
-local function try_build(layer: Plot.gridlayer, destination: Instance, pos: Position.position, idx: number)
-	local asset_name = Asset.set_key_resolve(Asset.assets, layer.assets[idx])
-	if layer.assets_built[idx] == asset_name then
-		return
-	end
-	layer.assets_built[idx] = asset_name
-
-	local existingmodel = layer.assets_models[idx]
-	if existingmodel then
-		existingmodel:Destroy()
-		layer.assets_models[idx] = nil
-	end
-
-	local created = Asset.create_by_name(layer.assets[idx])
-
-	Asset.move_to(created, pos)
-	layer.assets_models[idx] = created
-	created.Parent = destination
 end
 
 
@@ -212,8 +192,7 @@ end
 
 
 local function cell_update(
-	back: {[string]: Plot.gridlayer},
-	front: {[string]: Plot.gridlayer},
+	layers: {[string]: Plot.gridlayer},
 	pos: Position.position,
 	dirty: {Position.position}
 )
@@ -221,29 +200,44 @@ local function cell_update(
 	transformation_rules_get_positions(pos, positions_to_check)
 	for _, positions in positions_to_check do
 		for _, newPos in positions do
-			for layerName in back do
-				Plot.gridlayer_set_asset(front[layerName], newPos, Plot.gridlayer_get_asset(back[layerName], newPos))
-			end
 			table.insert(dirty, newPos)
 		end
 	end
+end
 
-	for layerName, positions in positions_to_check do
-		for _, newPos in positions do
-			local assets_staged = {}
-			for _, rule in transformation_rules do
-				if cell_matches_transformation_rule(back, newPos, rule) then
-					local asset = assets_staged[rule.layer] or Plot.gridlayer_get_asset(back[rule.layer], newPos)
-					if not asset:find(rule.modifier) and asset ~= "" then
-						assets_staged[rule.layer] = asset .. "." .. rule.modifier
-					end
-				end
-			end
-			for layer_name, asset in assets_staged do
-				Plot.gridlayer_set_asset(front[layer_name], newPos, asset)
+
+local function try_build(layer: Plot.gridlayer, destination: Instance, pos: Position.position, idx: number)
+	local asset_name = layer.assets[idx]
+
+	local layers = Plot.gridlayer_get_by_height(Plot.get_by_folder(pos.plot), layer.height)
+	for _, rule in transformation_rules do
+		if rule.layer ~= layer.name then
+			continue
+		end
+		if cell_matches_transformation_rule(layers, pos, rule) then
+			if not asset_name:find(rule.modifier) and asset_name ~= "" then
+				asset_name = asset_name .. "." .. rule.modifier
 			end
 		end
 	end
+
+	asset_name = Asset.set_key_resolve(Asset.assets, asset_name)
+	if layer.assets_built[idx] == asset_name then
+		return
+	end
+	layer.assets_built[idx] = asset_name
+
+	local existingmodel = layer.assets_models[idx]
+	if existingmodel then
+		existingmodel:Destroy()
+		layer.assets_models[idx] = nil
+	end
+
+	local created = Asset.create_by_name(asset_name)
+
+	Asset.move_to(created, pos)
+	layer.assets_models[idx] = created
+	created.Parent = destination
 end
 
 
@@ -274,20 +268,8 @@ end
 function Plot.update_execute_all(p)
 	local dirty = {}
 	for _, update in p.updates do
-		local height = update.pos.Y
-		local back = {}
-		local front = {}
-		for _, layer in p.layers do
-			if layer.height == update.pos.Y then
-				back[layer.name] = layer
-			end
-		end
-		for _, layer in p.layers_computed do
-			if layer.height == update.pos.Y then
-				front[layer.name] = layer
-			end
-		end
-		cell_update(back, front, update, dirty)
+		local layers = Plot.gridlayer_get_by_height(p, update.pos.Y)
+		cell_update(layers, update, dirty)
 	end
 	for _, pos in dirty do
 		Plot.update_push(pos)
@@ -295,26 +277,15 @@ function Plot.update_execute_all(p)
 end
 
 
-local function plot_init(p: Plot.plot)
-	Plot.allPlots[p.folder] = p
-	local layers_by_height_front = {}
-	local layers_by_height_back = {}
-	for _, layer in p.layers_computed do
-		local height = layer.height
-		layers_by_height_front[height] = layers_by_height_front[height] or {}
-		layers_by_height_front[height][layer.name] = layer
-	end
-	for _, layer in p.layers do
-		local height = layer.height
-		layers_by_height_back[height] = layers_by_height_back[height] or {}
-		layers_by_height_back[height][layer.name] = layer
-	end
+local function plot_rebuild_full(p: Plot.plot)
 	local models = p.folder:FindFirstChild("Models")
 	if models == nil then
 		return
 	end
 
-	for height, front in layers_by_height_front do
+	local last_wait = tick()
+	for height = 0, Config.plot.layer_count-1 do
+		local front = Plot.gridlayer_get_by_height(p, height)
 		for x = 1, p.size.X do
 			for z = 1, p.size.Y do
 				for rot = 0, 3 do
@@ -324,13 +295,28 @@ local function plot_init(p: Plot.plot)
 						plot = p.folder
 					}
 					
-					cell_init(layers_by_height_back[height], front, pos)
+					cell_init(front, front, pos)
 					for _, layer in front do
 						Plot.layers[layer.type].build_cell(p, layer, pos, models)
 					end
 				end
+				local t = tick()
+				if last_wait - t > 1/60 then
+					task.wait()
+					last_wait = tick()
+				end
 			end
 		end
+	end
+
+end
+
+
+local function plot_init(p: Plot.plot)
+	Plot.allPlots[p.folder] = p
+
+	if Config.behaviour.plots_are_persistent then
+		plot_rebuild_full(p)
 	end
 end
 
@@ -346,12 +332,11 @@ function Plot.build(p, reload)
 		return
 	end
 	Plot.update_execute_all(p)
-	
+	print(p.updates)
+
 	for _, pos in p.updates do
-		for _, layer in p.layers_computed do
-			if layer.height == pos.pos.Y then
-				Plot.layers[layer.type].build_cell(p, layer, pos, models)
-			end
+		for _, layer in Plot.gridlayer_get_by_height(p, pos.pos.Y) do
+			Plot.layers[layer.type].build_cell(p, layer, pos, models)
 		end
 	end
 	table.clear(p.updates)
