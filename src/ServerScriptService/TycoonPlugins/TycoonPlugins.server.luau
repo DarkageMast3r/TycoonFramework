@@ -4,6 +4,12 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local starterGui = game:GetService("StarterGui")
 local starterPlayer = game:GetService("StarterPlayer")
 local selection = game:GetService("Selection")
+
+if not replicatedStorage:FindFirstChild("OTF") then
+	print("OTF not installed, not loading plugins.")
+	return
+end
+
 local contracts = replicatedStorage.OTF.Client.Contracts
 local common = replicatedStorage.OTF.Common
 local Elements = require(contracts.UI.Elements)
